@@ -6,11 +6,12 @@ Here, we provide a Matlab implementation of the method (implemented and tested u
 
 ## Usage
 
-TCA requires cell-type proportion estimates for the samples in the data. These can be obtained by either using the reference-based model by Houseman et al. (see an implementation <a href="http://http://glint-epigenetics.readthedocs.io/" target="_blank">here</a>) or using the semi-supervised approach (which does not require reference data) by Rahmani et al. (see an implementation <a href="https://github.com/cozygene/BayesCCE" target="_blank">here</a>).
+TCA requires cell-type proportion estimates for the samples in the data. These can be obtained by either using the reference-based model by Houseman et al. (see an implementation <a href="http://glint-epigenetics.readthedocs.io/" target="_blank">here</a>) or using the semi-supervised approach (which does not require reference data) by Rahmani et al. (see an implementation <a href="https://github.com/cozygene/BayesCCE" target="_blank">here</a>).
 
 There are two main functions. A full documentation of the input and output arguments required for these functions is provided in the headers of these function.
-TCA_EWAS.m - for performing cell-type-specific EWAS under the TCA model.
-TCA.m - for estimating allows (in case only estimates of cell-type-specific methylation levels are desired rather than performing a cell-type-specific EWAS). The required input arguments for this function can be estimated using the function TCA_fit_model.m.
+* **TCA_EWAS.m** - for performing cell-type-specific EWAS under the TCA model.
+
+* **TCA.m** - for estimating allows (in case only estimates of cell-type-specific methylation levels are desired rather than performing a cell-type-specific EWAS). The required input arguments for this function can be estimated using the function TCA_fit_model.m.
 
 ### Citing TCA
 
