@@ -1,6 +1,6 @@
 # Tensor Composition Analysis (TCA)
 
-Tensor Composition Analysis (TCA) is a method for estimating cell-type-specific methylation levels and performing cell-type-specific association studies (EWAS) using bulk methylation data collected from heterogeneous source.
+Tensor Composition Analysis (TCA) is a method for estimating cell-type-specific methylation levels and performing cell-type-specific epigenetic association studies (EWAS) using bulk methylation data collected from heterogeneous source.
 
 Here, we provide a Matlab implementation of the method (implemented and tested using Matlab 2015b).
 
@@ -12,7 +12,7 @@ There are two main functions. A full documentation of the input and output argum
 TCA_EWAS.m - for performing cell-type-specific EWAS under the TCA model.
 TCA.m - for estimating allows (in case only estimates of cell-type-specific methylation levels are desired rather than performing a cell-type-specific EWAS). The required input arguments for this function can be estimated using the function TCA_fit_model.m.
 
-### Citing BayesCCE
+### Citing TCA
 
 If you useTCA  in any published work, please cite the manuscript describing the method:
 
