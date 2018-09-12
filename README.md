@@ -13,12 +13,13 @@ There are two main functions in this distribution. A full documentation of the i
 
 * **TCA.m** - for estimating cell-type-specific methylation levels (in case only these estimates are desired rather than performing a cell-type-specific EWAS). The required input arguments for this function can be estimated using the function TCA_fit_model.m.
 
+<!---
 ### Citing TCA
 
 If you use TCA in any published work, please cite the manuscript describing the method:
 
 Elior Rahmani, Regev Schweiger, Brooke Rhead, Lindsey A. Criswell, Lisa F. Barcellos, Eleazar Eskin, Saharon Rosset, Sriram Sankararaman, and Eran Halperin. *bioRxiv*, 2018.
-
+-->
 ### License
 
 BayesCCE is available under the <a href="https://opensource.org/licenses/GPL-3.0" target="_blank">GPL-3 license</a>.
