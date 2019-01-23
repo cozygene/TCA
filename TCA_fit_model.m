@@ -5,10 +5,13 @@
 % the number of sites.
 % W = an n by k matrix of cell proportion estimates for each
 % individual, where k is the number of assumed cell types.
-% C1 = an n by p1 matrix of p1 cell-type specific covariates for each
-% individual. If there are no cell-type specific covariates pass [].
-% C2 = an n by p2 matrix of p2 global covariates for each individual. If there are no global covariates pass [].
-% fit_W (optional) = 1 / 0 for refiting W (default is 0)
+% C1 (optional) = an n by p1 matrix of p1 cell-type specific covariates for each
+% individual (default is []).
+% C2 (optional) = an n by p2 matrix of p2 global covariates (i.e.
+% covariates that are expected to affect the mixture and not the
+% cell-type-specific levels - for example, batch effects) for each individual (default is []). 
+% fit_W (optional) = an indicator (i.e. 0 or 1) whether to refit W  or not
+% (default is 0).
 
 function [W,mus_hat,sigmas_hat,tau_hat,deltas_hat,gammas_hat] = TCA_fit_model(X, W, C1, C2, fit_W)
 
@@ -16,6 +19,12 @@ function [W,mus_hat,sigmas_hat,tau_hat,deltas_hat,gammas_hat] = TCA_fit_model(X,
 MAX_ITERATIONS = 10;
 EPSILON = 0.001; % percent of difference for convergence of optimization;
 
+if (~exist('C1','var'))
+    C1 = [];
+end
+if (~exist('C2','var'))
+    C2 = [];
+end
 if (~exist('fit_W','var'))
     fit_W = 0;
 end
