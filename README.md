@@ -47,6 +47,7 @@ TCA is available under the <a href="https://opensource.org/licenses/GPL-3.0" tar
 
 This software was developed by Elior Rahmani (elior.rahmani@gmail.com).
 
+ [![Travis build status](https://travis-ci.org/cozygene/TCA.svg?branch=master)](https://travis-ci.org/cozygene/TCA)
 ___
 
 <a name="myfootnote1">1</a>: Rahmani et al. "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology." bioRxiv (2018).
