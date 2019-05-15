@@ -14,3 +14,4 @@ RoxygenNote: 6.1.1
 Depends: R (>= 3.4.0)
 Suggests: testthat
 URL: https://www.biorxiv.org/content/10.1101/437368v1
+BugReports: https://github.com/cozygene/TCA/issues
