@@ -1,0 +1,57 @@
+default:
+  # refactor configs for tca
+  rand_svd: TRUE
+  sd_threshold: 0.02  # filter out features with standard deviation below this threshold when running ReFACTor; removing features with very low variability tends to improve speed and performance.
+  # optimization configs:
+  lsqlincon_inf: 1000000 # lsqlincon fails if given Inf
+  min_sd: 0.0001 # minimal value for an estimated variance; required for stability
+  mu_min: NULL # minimal value for each estimated mean; if NULL then this will be set to min(X)
+  mu_max: NULL # maximal value for each estimated mean; if NULL then this will be set to max(X)
+  mu_epsilon: 0.00001 # truncates the range [mu_min,mu_max] by this value so that mu is required to be in [mu_mean+mu_epsilon,mu_max-mu_epsilon]; required for numerical stability
+  epsilon: 0.001 # percent of difference for convergence
+  tau_hat_init: 0.01  # initial estimate of the iid component added on top of the mixture signal
+  # pbapply options:
+  nout: 10  # the resolution of the progress bars (higher values -> highr resolution but increased overhead, which in turns results in longer running time)
+  type: "txt" # change to "none" to supress the progress bars (this will result is some speed up of the running time)
+  # nloptr configs:
+  nloptr_opts_algorithm: "NLOPT_LD_MMA"
+  nloptr_opts_fit_W_algorithm: "NLOPT_LD_SLSQP"
+  nloptr_opts_fit_conditional_algorithm: "NLOPT_LD_SLSQP"
+  nloptr_opts_print_level: 0
+  nloptr_opts_xtol_rel: 1.0e-8
+  nloptr_opts_check_derivatives: FALSE
+  # tcareg output configs:
+  sep: "," # separator for output files
+  show_progress: FALSE
+  verbose: FALSE
+  # more configs:
+  lambda: 0.1 # weight for L2 regularization to handle co-linearily in the association testing
+
+debug:
+  # refactor configs for tca
+  rand_svd: TRUE
+  sd_threshold: 0.02  # filter out features with standard deviation below this threshold when running ReFACTor; removing features with very low variability tends to improve speed and performance.
+  # optimization configs:
+  lsqlincon_inf: 1000000 # lsqlincon fails if given Inf
+  min_sd: 0.0001 # minimal value for an estimated variance; required for stability
+  mu_min: NULL # minimal value for each estimated mean; if NULL then this will be set to min(X)
+  mu_max: NULL # maximal value for each estimated mean; if NULL then this will be set to max(X)
+  mu_epsilon: 0.00001 # truncates the range [mu_min,mu_max] by this value so that mu is required to be in [mu_mean+mu_epsilon,mu_max-mu_epsilon]; required for numerical stability
+  epsilon: 0.001 # percent of difference for convergence
+  tau_hat_init: 0.01  # initial estimate of the iid component added on top of the mixture signal
+  # pbapply options:
+  nout: 10  # the resolution of the progress bars (higher values -> highr resolution but increased overhead, which in turns results in longer running time)
+  type: "txt" # change to "none" to supress the progress bars (this will result is some speed up of the running time)
+  # nloptr configs:
+  nloptr_opts_algorithm: "NLOPT_LD_MMA"
+  nloptr_opts_fit_W_algorithm: "NLOPT_LD_SLSQP"
+  nloptr_opts_fit_conditional_algorithm: "NLOPT_LD_SLSQP"
+  nloptr_opts_print_level: 0
+  nloptr_opts_xtol_rel: 1.0e-8
+  nloptr_opts_check_derivatives: FALSE
+  # tcareg output configs:
+  sep: "," # separator for output files
+  show_progress: FALSE
+  verbose: FALSE
+  # more configs:
+  lambda: 0.1 # weight for L2 regularization to handle co-linearily in the association testing

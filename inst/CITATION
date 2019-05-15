@@ -1,0 +1,16 @@
+citHeader("To cite TCA in publications please use:")
+
+citEntry(entry = "Article",
+  title        = "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology",
+  author       = personList(as.person("Elior Rahmani"),as.person("Regev Schweiger"),as.person("Brooke Rhead"),as.person("Lindsey Criswell"),as.person("Lisa Barcellos"),as.person("Eleazar Eskin"),as.person("Saharon Rosset"),as.person("Sriram Sankararaman"),as.person("Eran Halperin")),
+  journal      = "bioRxiv",
+  year         = "2018",
+  url          = "https://www.biorxiv.org/content/10.1101/437368v1",
+
+  textVersion  =
+  paste("Elior Rahmani, Regev Schweiger, Brooke Rhead, Lindsey Criswell, Lisa Barcellos, Eleazar Eskin, Saharon Rosset, Sriram Sankararaman, Eran Halperin (2018).",
+        "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology.",
+        "Biorxiv",
+        "URL https://www.biorxiv.org/content/10.1101/437368v1")
+)
+
