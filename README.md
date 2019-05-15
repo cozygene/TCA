@@ -13,6 +13,24 @@ There are two main functions in this distribution. A full documentation of the i
 
 * **TCA.m** - for estimating cell-type-specific methylation levels (in case only these estimates are desired rather than performing a cell-type-specific EWAS). The required input arguments for this function can be estimated using the function TCA_fit_model.m.
 
+## Demo
+
+We provide small simulated demo data, wherein the phenotype is associated with the last site in the data matrix. For performing EWAS on the demo files following the TCA model, execute in matlab the following commands from the 'demo' directory:
+```matlab
+% <matlab code>
+% Add the .m files to the path
+addpath '../'
+% Read the data files
+y = dlmread('demo_y.txt');  % phenotype
+X = dlmread('demo_X.txt');  % methylation matrix (individuals by sites)
+W = dlmread('demo_W.txt');  % proportions matrix (individuals by cell types)
+% Fit the parameters of the TCA model
+[W,mus_hat,sigmas_hat,tau_hat] = TCA_fit_model(X, W);
+% Perform EWAS under the TCA model with cell-type-specific effects
+pvals = TCA_EWAS(y, X, W, mus_hat, sigmas_hat, tau_hat);
+```
+
+
 <!---
 ### Citing TCA
 
@@ -20,6 +38,7 @@ If you use TCA in any published work, please cite the manuscript describing the 
 
 Elior Rahmani, Regev Schweiger, Brooke Rhead, Lindsey A. Criswell, Lisa F. Barcellos, Eleazar Eskin, Saharon Rosset, Sriram Sankararaman, and Eran Halperin. *bioRxiv*, 2018.
 -->
+
 ### License
 
 TCA is available under the <a href="https://opensource.org/licenses/GPL-3.0" target="_blank">GPL-3 license</a>.
@@ -32,6 +51,6 @@ ___
 
 <a name="myfootnote1">1</a>: Rahmani et al. "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology." bioRxiv (2018).
 
-<a name="myfootnote2">1</a>: Houseman et al. "DNA methylation arrays as surrogate measures of cell mixture distribution." BMC bioinformatics (2012).
+<a name="myfootnote2">2</a>: Houseman et al. "DNA methylation arrays as surrogate measures of cell mixture distribution." BMC bioinformatics (2012).
 
-<a name="myfootnote3">2</a>: Rahmani et al. "BayesCCE: a Bayesian framework for estimating cell-type composition from DNA methylation without the need for methylation reference." Genome biology (2018).
+<a name="myfootnote3">3</a>: Rahmani et al. "BayesCCE: a Bayesian framework for estimating cell-type composition from DNA methylation without the need for methylation reference." Genome biology (2018).
