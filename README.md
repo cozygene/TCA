@@ -14,13 +14,13 @@ TCA is available in both R and Matlab. Note that the Matlab version was used for
 
 The full documentation of the TCA R package can be found <a href="https://github.com/cozygene/TCA/blob/master/manual.pdf" target="_blank">here</a>.
 
-You can also find a full working example of TCA in this vignette about cell-type-specific resolution epigenetics using TCA in R.
+You can also find a full working example of TCA in <a href="https://github.com/cozygene/TCA" target="_blank">this vignette</a> about cell-type-specific resolution epigenetics using TCA in R.
 
 <!--describe the config file.-->
 
 ## Matlab version
 
-implemented and tested using Matlab R2015b
+Tne Matlab version of TCA was implemented and tested using Matlab R2015b.
 
 ### Usage
 
@@ -29,7 +29,8 @@ TCA requires cell-type proportion estimates for the samples in the data. These c
 There are two main functions in this distribution. A full documentation of the input arguments and output values of these functions is provided in the headers of these function.
 * **TCA_EWAS.m** - for performing cell-type-specific EWAS under the TCA model.
 
-* **TCA.m** - for estimating cell-type-specific methylation levels (in case only these estimates are desired rather than performing a cell-type-specific EWAS). The required input arguments for this function can be estimated using the function TCA_fit_model.m.
+* **TCA.m** - for estimating cell-type-specific methylation levels (in case only these estimates are desired rather than performing a cell-type-specific EWAS).
+<!--The required input arguments for this function can be estimated using the function TCA_fit_model.m.-->
 
 ### Demo
 
@@ -52,7 +53,7 @@ pvals = TCA_EWAS(y, X, W, mus_hat, sigmas_hat, tau_hat);
 
 ### License
 
-Both the R and Matlab version of TCA are available under the <a href="https://opensource.org/licenses/GPL-3.0" target="_blank">GPL-3 license</a>.
+Both the R and Matlab versions of TCA are available under the <a href="https://opensource.org/licenses/GPL-3.0" target="_blank">GPL-3 license</a>.
 
 <!---
 #### Citing TCA
@@ -68,13 +69,13 @@ Elior Rahmani, Regev Schweiger, Brooke Rhead, Lindsey A. Criswell, Lisa F. Barce
 This software was developed by Elior Rahmani (elior.rahmani@gmail.com).
 
 ### Bug reports
-Please <a href="https://github.com/cozygene/TCA/issues/" target="_blank">open an issue</a>) for reporting bugs. If you are reporting bugs with the R version, please make sure to set the argument debug to TRUE and attach your log.
+Please <a href="https://github.com/cozygene/TCA/issues/" target="_blank">open an issue</a> for reporting bugs. If you are reporting bugs with the R version, please make sure to set the argument 'debug' to TRUE and attach your log. For both the R and Matlab versions, please make sure to attach the error message you get.
 
 
 ___
 
-<a name="myfootnote1">1</a>: Rahmani et al. "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology." Nature Communications, in press (2019).
+<a name="myfootnote1">1</a>. Rahmani et al. "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology." Nature Communications, in press (2019).
 
-<a name="myfootnote2">2</a>: Houseman et al. "DNA methylation arrays as surrogate measures of cell mixture distribution." BMC bioinformatics (2012).
+<a name="myfootnote2">2</a>. Houseman et al. "DNA methylation arrays as surrogate measures of cell mixture distribution." BMC bioinformatics (2012).
 
-<a name="myfootnote3">3</a>: Rahmani et al. "BayesCCE: a Bayesian framework for estimating cell-type composition from DNA methylation without the need for methylation reference." Genome biology (2018).
+<a name="myfootnote3">3</a>. Rahmani et al. "BayesCCE: a Bayesian framework for estimating cell-type composition from DNA methylation without the need for methylation reference." Genome biology (2018).
