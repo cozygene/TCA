@@ -4,10 +4,10 @@
 \alias{tca}
 \title{Fitting the TCA model}
 \usage{
-tca(X, W, C1 = NULL, C2 = NULL, refit_W = TRUE,
-  refit_features = NULL, refit_t = 500, parallel = FALSE,
-  num_cores = NULL, max_iters = 10, log_file = "TCA.log",
-  debug = FALSE)
+tca(X, W, C1 = NULL, C2 = NULL, refit_W = FALSE,
+  refit_W.features = NULL, refit_W.sparsity = 500,
+  refit_W.sd_threshold = 0.02, parallel = FALSE, num_cores = NULL,
+  max_iters = 10, log_file = "TCA.log", debug = FALSE)
 }
 \arguments{
 \item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported.}
@@ -18,15 +18,17 @@ tca(X, W, C1 = NULL, C2 = NULL, refit_W = TRUE,
 
 \item{C2}{An \code{n} by \code{p2} design matrix of covariates that may affect the mixture (i.e. rather than directly the sources of the mixture; for example, variables that capture biases in the collection of the measurements). Note that \code{C2} must include row names and column names and should not include an intercept term. NA values are currently not supported.}
 
-\item{refit_W}{A logical value indicating whether to re-estimate the input \code{W} under the TCA model. \code{refit_W} may be set to \code{TRUE} when only an estimate of \code{W} is available (rather than the true \code{W}).}
+\item{refit_W}{A logical value indicating whether to re-estimate the input \code{W} under the TCA model.}
 
-\item{refit_features}{A vector with the names of the features in \code{X} to consider when re-estimating \code{W} (i.e. when \code{refit_W == TRUE}). This is useful in cases where just a subset of the features are expected to be informative for estimating \code{W}. If \code{refit_features == NULL} then the ReFACTor algorithm is used for performing feature selection (see also \code{refit_t}).}
+\item{refit_W.features}{A vector with the names of the features in \code{X} to consider when re-estimating \code{W} (i.e. when \code{refit_W == TRUE}). This is useful since oftentimes just a subset of the features in \code{X} will be informative for estimating \code{W}. If \code{refit_W.features == NULL} then the ReFACTor algorithm will be used for performing feature selection (see also \code{refit_W.sparsity, refit_W.sd_threshold}).}
 
-\item{refit_t}{The number of features to select using the ReFACTor algorithm when re-estimating \code{W} (active only if \code{refit_W == TRUE} and \code{refit_features == NULL}). Note that \code{refit_t} must be lower or equal to \code{m}, the number of features in \code{X}.}
+\item{refit_W.sparsity}{A numeric value indicating the number of features to select using the ReFACTor algorithm when re-estimating \code{W} (activated only if \code{refit_W == TRUE} and \code{refit_W.features == NULL}). Note that \code{refit_W.sparsity} must be lower or equal to the number of features in \code{X}. For more information, see the argument \code{sparsity} in \link{refactor}.}
+
+\item{refit_W.sd_threshold}{A numeric value indicating a standard deviation threshold to be used for excluding low-variance features in \code{X} (activated only if \code{refit_W == TRUE} and \code{refit_W.features == NULL}). For more information, see the argument \code{sd_threshold} in \link{refactor}.}
 
 \item{parallel}{A logical value indicating whether to use parallel computing (possible when using a multi-core machine).}
 
-\item{num_cores}{A numeric value indicating the number of cores to use (active only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.}
+\item{num_cores}{A numeric value indicating the number of cores to use (activated only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.}
 
 \item{max_iters}{A numeric value indicating the maximal number of iterations to use in the optimization of the TCA model (\code{max_iters} iterations will be used as long as the optimization does not converge in earlier iterations).}
 
@@ -44,12 +46,12 @@ A list with the estimated parameters of the model. This list can be then used as
 \item{deltas_hat}{An \code{m} by \code{p2} matrix of the estimated effects of the \code{p2} factors in \code{C2} on the mixture values of each of the \code{m} features in \code{X}.}
 }
 \description{
-Fits the TCA model for an input matrix of observations coming from a mixture of \code{k} sources, under the assumption that each observation is a mixture of unique source-specific values (in each feature in the data). For example, in the context of bulk tissue-level DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tca} allows to model the methylation of each individual as a mixture of cell-type-specific methylation levels that are unique to the individual.
+Fits the TCA model for an input matrix of observations coming from a mixture of \code{k} sources, under the assumption that each observation is a mixture of unique source-specific values (in each feature in the data). For example, in the context of tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tca} allows to model the methylation of each individual as a mixture of cell-type-specific methylation levels that are unique to the individual.
 }
 \details{
 The TCA model assumes that the hidden source-specific values are random variables. Formally, denote by \eqn{Z_{hj}^i} the source-specific value of observation \eqn{i} in feature \eqn{j} source \eqn{h}, the TCA model assumes: \deqn{Z_{hj}^i \sim N(\mu_{hj},\sigma_{hj}^2)} where \eqn{\mu_{hj},\sigma_{hj}} represent the mean and standard deviation that are specific to feature \eqn{j} source \eqn{h}. The model further assumes that the observed value of observation \eqn{i} in feature \eqn{j} is a mixture of \eqn{k} different sources: \deqn{X_{ji} =  \sum_{h=1}^k W_{ih}Z_{hj}^i + \epsilon_{ji}} where \eqn{W_{ih}} is the non-negative proportion of source \eqn{h} in the mixture of observation \eqn{i} such that \eqn{\sum_{h=1}^kW_{ih} = 1}, and \eqn{\epsilon_{ji} \sim N(0,\tau^2)} is an i.i.d. component of variation that models measurement noise. Note that the mixture proportions in \eqn{W} are, in general, unique for each individual, therefore each entry in the data matrix \eqn{X} is coming from a unique distribution (i.e. a different mean and a different variance).
 
-In cases where the true \code{W} is unknown, \code{tca} can be provided with initial estimates of \code{W} and then re-estimate \code{W} as part of the optimization procedure (see argument \code{refit_W}). These initial estimates should not be random but rather capture the information in \code{W} to some extent. When the argument \code{refit_W} is used, it is typically the case that only a subset of the features should be used for re-estimating \code{W}. Therefore, when re-estimating \code{W}, \code{tca} performs feature selection using the ReFACTor algorithm; alternatively, it can also be provided with a user-specified list of features to be used in the re-estimation (see argument \code{refit_features}).
+In cases where the true \code{W} is unknown, \code{tca} can be provided with initial estimates of \code{W} and then re-estimate \code{W} as part of the optimization procedure (see argument \code{refit_W}). These initial estimates should not be random but rather capture the information in \code{W} to some extent. When the argument \code{refit_W} is used, it is typically the case that only a subset of the features should be used for re-estimating \code{W}. Therefore, when re-estimating \code{W}, \code{tca} performs feature selection using the ReFACTor algorithm; alternatively, it can also be provided with a user-specified list of features to be used in the re-estimation (see argument \code{refit_W.features}).
 
 Factors that systematically affect the source-specific values \eqn{Z_{hj}^i} can be further considered (see argument \code{C1}). In that case, we assume: \deqn{Z_{hj}^i \sim N(\mu_{hj}+c^{(1)}_i \gamma_j^h,\sigma_{hj}^2)} where \eqn{c^{(1)}_i} is a row vector from \code{C1}, corresponding to the values of the \eqn{p_1} factors for observation \eqn{i}, and \eqn{\gamma_j^h} is a vector of \eqn{p_1} corresponding effect sizes.
 
@@ -61,7 +63,7 @@ Factors that systematically affect the mixture values \eqn{X_{ji}}, such as vari
 
 \examples{
 data <- test_data(100, 20, 3, 1, 1, 0.01)
-tca.mdl <- tca(data$X, data$W, data$C1, data$C2, refit_W = FALSE)
+tca.mdl <- tca(data$X, data$W, data$C1, data$C2)
 
 }
 \references{

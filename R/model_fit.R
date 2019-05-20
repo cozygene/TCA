@@ -24,7 +24,7 @@ tca.fit <- function(X, W, C1, C2, refit_W, parallel, num_cores, max_iters){
   const <- -n*log(2*pi)
   ll_prev <- -Inf
   for (iter in 1:max_iters){
-    if (refit_W) flog.info("Iteration %s out of %s external iterations (fitting all parameters including W)", iter, max_iters)
+    if (refit_W) flog.info("Iteration %s out of %s external iterations (fitting all parameters including W)...", iter, max_iters)
 
     flog.info("Fitting means and variances...")
     res <- tca.fit_means_vars(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_hat, C1, gammas_hat, max_iters, parallel, num_cores)
@@ -48,6 +48,7 @@ tca.fit <- function(X, W, C1, C2, refit_W, parallel, num_cores, max_iters){
     ll_diff = ll_new-ll_prev
     flog.debug("ll_new=%s, ll_prev=%s, ll_diff=%s, threshold=%s",ll_new,ll_prev,ll_diff,config[["epsilon"]]*abs(ll_new))
     if (ll_diff < config[["epsilon"]]*abs(ll_new)){
+      flog.info("External loop converged.")
       flog.debug("break")
       break
     }
@@ -124,7 +125,7 @@ tca.fit_means_vars <- function(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_ha
   # Perform an alternative optimization of the means (mus, deltas, gammas) and variances (sigmas and tau)
   for (iter in 1:max_iters){
 
-    flog.info("Iteration %s out of %s internal iterations", iter, max_iters)
+    flog.info("Iteration %s out of %s internal iterations...", iter, max_iters)
 
     # (1) Estimate the means (mus, deltas, gammas)
 
@@ -269,6 +270,7 @@ tca.fit_means_vars <- function(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_ha
     ll_diff = ll_new-ll_prev
     flog.debug("ll_new=%s, ll_prev=%s, ll_diff=%s, diff_threshold=%s",ll_new,ll_prev,ll_diff,config[["epsilon"]]*abs(ll_new))
     if (ll_diff < config[["epsilon"]]*abs(ll_new)){
+      flog.info("Internal loop converged.")
       flog.debug("break")
       break
     }
@@ -421,6 +423,7 @@ estimate_Z <- function(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_hat, C1, g
   for (i in 1:n){
     W_prime[[i]] = tcrossprod(W[i,],W[i,])/(tau_hat**2)
   }
+  #if (m==1) deltas_hat <- t(as.matrix(deltas_hat))
   C2_prime <- (tcrossprod(C2,deltas_hat) + X)/(tau_hat**2)
   cl <- if (parallel) init_cluster(num_cores) else NULL
   if (parallel) clusterExport(cl, c("W","mus_hat","sigmas_hat","tau_hat","C1","gammas_hat","W_prime","C2_prime","estimate_Z_j"), envir=environment())
@@ -438,6 +441,7 @@ estimate_Z <- function(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_hat, C1, g
     colnames(Z_hat[[h]]) <- colnames(X)
     Z_hat[[h]] <- t(Z_hat[[h]])
   }
+  flog.info("Finished estimating tensor.")
   return(Z_hat)
 }
 
@@ -480,7 +484,7 @@ tcareg.fit_joint <- function(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, g
   ll1 <- mdl1[["ll"]]
   d <- data.frame(y,C3)
   mdl0 <- lm(y~.,data = d) # the null log-likelihood under the model y ~ C3 (i.e. the null under the case of no source-specific effects)
-  ll0 <-numeric(length(mdl1[["ll"]])) + as.numeric(logLik(mdl0))
+  ll0 <- numeric(length(mdl1[["ll"]])) + as.numeric(logLik(mdl0))
   df <- if(single_effect) 1 else ncol(W)
   lrt <- lrt.test(ll0, mdl1[["ll"]], df = df)
   qvals <- p.adjust(lrt[["pvals"]], method = "BH")
@@ -497,7 +501,7 @@ tcareg.fit_marginal <- function(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1
   for (h in 1:k){
     mdl1 <- tcareg.optimize(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, h, parallel, num_cores, FALSE)
     ll1 <- mdl1[["ll"]]
-    ll0 <-numeric(length(mdl1[["ll"]])) + as.numeric(logLik(mdl0))
+    ll0 <- numeric(length(mdl1[["ll"]])) + as.numeric(logLik(mdl0))
     df <- 1
     lrt <- lrt.test(ll0, ll1, df = df)
     qvals <- p.adjust(lrt[["pvals"]], method = "BH")
@@ -526,8 +530,14 @@ tcareg.fit_marginal_conditional <- function(X, y, W, mus_hat, sigmas_hat, C2, de
 
 
 tcareg.fit_custom <- function(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, parallel, num_cores, null_model, alternative_model){
-  mdl0 <- tcareg.optimize(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, null_model, parallel, num_cores, FALSE)
-  ll0 <- mdl0[["ll"]]
+  if (is.null(null_model)){
+    d <- data.frame(y,C3)
+    mdl0 <- lm(y~.,data = d) # the null log-likelihood under the model y ~ C3 (i.e. the null under the case of no source-specific effects)
+    ll0 <- numeric(ncol(X)) + as.numeric(logLik(mdl0))
+  }else{
+    mdl0 <- tcareg.optimize(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, null_model, parallel, num_cores, FALSE)
+    ll0 <- mdl0[["ll"]]
+  }
   mdl1 <- tcareg.optimize(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, alternative_model, parallel, num_cores, FALSE)
   ll1 <- mdl1[["ll"]]
   df <- length(alternative_model) - length(null_model)

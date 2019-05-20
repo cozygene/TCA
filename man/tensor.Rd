@@ -14,7 +14,7 @@ tensor(X, tca.mdl, parallel = FALSE, num_cores = NULL,
 
 \item{parallel}{A logical value indicating whether to use parallel computing (possible when using a multi-core machine).}
 
-\item{num_cores}{A numeric value indicating the number of cores to use (active only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.}
+\item{num_cores}{A numeric value indicating the number of cores to use (activated only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.}
 
 \item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file.}
 
@@ -24,14 +24,14 @@ tensor(X, tca.mdl, parallel = FALSE, num_cores = NULL,
 A list with the estimated source-specific values. The first element in the list is an \code{m} by \code{n} matrix (features by observations) corresponding to the estimated values coming from the first source, the second element in the list is another \code{m} by \code{n} matrix (features by observations) corresponding to the estimated values coming from the second source and so on.
 }
 \description{
-Estimates 3-dimensional signals (features by observations by sources) from input of mixtures (features by observations), under the assumption of the TCA model that each observation is a mixture of unique source-specific values (in each feature in the data). For example, in the context of bulk tissue-level DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tensor} allows to estimate a tensor of cell-type-specific levels for each individual in each methylation site (i.e. a tensor of methylation sites by individuals by cell types).
+Estimates 3-dimensional signals (features by observations by sources) from input of mixtures (features by observations), under the assumption of the TCA model that each observation is a mixture of unique source-specific values (in each feature in the data). For example, in the context of  tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tensor} allows to estimate a tensor of cell-type-specific levels for each individual in each methylation site (i.e. a tensor of methylation sites by individuals by cell types).
 }
 \details{
 See \link{tca} for notations and details about the TCA model. Given estimates of the parameters of the model (given by \link{tca}), \code{tensor} uses the conditional distribution \eqn{Z_{hj}^i|X_{ji}} for estimating the \eqn{k} source-specific levels of each observation \eqn{i} in each feature \eqn{j}.
 }
 \examples{
 data <- test_data(50, 20, 3, 2, 2, 0.01)
-tca.mdl <- tca(data$X, data$W, data$C1, data$C2, refit_W = FALSE)
+tca.mdl <- tca(data$X, data$W, data$C1, data$C2)
 Z_hat <- tensor(data$X, tca.mdl)
 
 }

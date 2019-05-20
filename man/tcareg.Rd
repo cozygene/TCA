@@ -19,25 +19,25 @@ tcareg(X, tca.mdl, y, C3 = NULL, test = "marginal",
 
 \item{C3}{An \code{n} by \code{p3} design matrix of covariates that may affect \code{y}. Note that \code{C3} must include row names and column names and should not include an intercept term. NA values are currently not supported.}
 
-\item{test}{A character vector with the type of test to perform on each of the features in \code{X}; one of the following options: \code{'marginal'}, \code{'marginal_conditional'}, \code{'joint'}, \code{'single_effect'}, or \code{'custom'}. Setting \code{'marginal'} or \code{'marginal_conditional'} corresponds to testing each feature in \code{X} for a statistical relation between \code{y} and each of the \code{k} sources separately; for any particular source under test, the \code{marginal_conditional} option further accounts for possible effects of the rest of the \code{k-1} sources (\code{'marginal'} will therefore tend to be more powerful in discovering truly related features, but at the same time more prone to falsely tagging the correct related sources if sources are highly correlated). Setting \code{'joint'} or \code{'single_effect'} corresponds to testing each feature for an overall statistical relation with \code{y}, while modeling source-specific effects; the latter option further assumes that the source-specific effects are the same within each feature (\code{'single_effect'} means only one degree of freedom and will therefore be more powerful when the assumption of a single effect within a feature holds). Finally, \code{'custom'} corresponds to testing each feature in \code{X} for a statistical relation with \code{y} under a user-specified model (alternative model) with respect to a null model (null model); for example, for testing for relation of the combined (potentially different) effects of features 1 and 2 while accounting for the (potentially different) effects of 3 and 4, set the null model to be sources 3, 4 and the alternative model to be sources 1, 2, 3, 4.}
+\item{test}{A character vector with the type of test to perform on each of the features in \code{X}; one of the following options: \code{'marginal'}, \code{'marginal_conditional'}, \code{'joint'}, \code{'single_effect'}, or \code{'custom'}. Setting \code{'marginal'} or \code{'marginal_conditional'} corresponds to testing each feature in \code{X} for a statistical relation between \code{y} and each of the \code{k} sources separately; for any particular source under test, the \code{marginal_conditional} option further accounts for possible effects of the rest of the \code{k-1} sources (\code{'marginal'} will therefore tend to be more powerful in discovering truly related features, but at the same time more prone to falsely tagging the correct related sources if sources are highly correlated). Setting \code{'joint'} or \code{'single_effect'} corresponds to testing each feature for an overall statistical relation with \code{y}, while modeling source-specific effects; the latter option further assumes that the source-specific effects are the same within each feature (\code{'single_effect'} means only one degree of freedom and will therefore be more powerful when the assumption of a single effect within a feature holds). Finally, \code{'custom'} corresponds to testing each feature in \code{X} for a statistical relation with \code{y} under a user-specified model (alternative model) with respect to a null model (null model); for example, for testing for relation of the combined (potentially different) effects of features 1 and 2 while accounting for the (potentially different) effects of 3 and 4, set the null model to be sources 3, 4 and the alternative model to be sources 1, 2, 3, 4. Indicating that \code{null_model} assumes no effect for any of the sources can be done by setting it to \code{NULL}.}
 
-\item{null_model}{A vector with a subset of the names of the sources in \code{tca.mdl$W} to be used as a null model (active only if \code{test == 'custom'}). Note that the null model must be nested within the alternative model.}
+\item{null_model}{A vector with a subset of the names of the sources in \code{tca.mdl$W} to be used as a null model (activated only if \code{test == 'custom'}). Note that the null model must be nested within the alternative model; set \code{null_model} to be \code{NULL} for indicating no effect for any of the sources under the null model.}
 
-\item{alternative_model}{A vector with a subset (or all) of the names of the sources in \code{tca.mdl$W} to be used as an alternative model (active only if \code{test == 'custom'}).}
+\item{alternative_model}{A vector with a subset (or all) of the names of the sources in \code{tca.mdl$W} to be used as an alternative model (activated only if \code{test == 'custom'}).}
 
 \item{save_results}{A logical value indicating whether to save the returned results in a file. If \code{TRUE} and \code{test == 'marginal'} or \code{test == 'marginal_conditional'} then \code{k} files will be saved (one for the results of each source).}
 
-\item{output}{Prefix for output files (active only if \code{save_results == TRUE}).}
+\item{output}{Prefix for output files (activated only if \code{save_results == TRUE}).}
 
 \item{sort_results}{A logical value indicating whether to sort the results by their p-value (i.e. features with lower p-value will appear first in the results).}
 
 \item{parallel}{A logical value indicating whether to use parallel computing (possible when using a multi-core machine).}
 
-\item{num_cores}{A numeric value indicating the number of cores to use (active only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.}
+\item{num_cores}{A numeric value indicating the number of cores to use (activated only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.}
 
 \item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file.}
 
-\item{features_metadata}{A path to a csv file containing metadata about the features in \code{X} that will be added to the output files (active only if \code{save_results == TRUE}). Each row in the metadata file should correspond to one feature (with the row name being the feature identifier, as it appears in the rows of \code{X}) and each column should correspond to one metadata descriptor (with an appropriate column name). Features that do not exist in \code{X} will be ignored and features in \code{X} with missing metadata information will show missing values.}
+\item{features_metadata}{A path to a csv file containing metadata about the features in \code{X} that will be added to the output files (activated only if \code{save_results == TRUE}). Each row in the metadata file should correspond to one feature (with the row name being the feature identifier, as it appears in the rows of \code{X}) and each column should correspond to one metadata descriptor (with an appropriate column name). Features that do not exist in \code{X} will be ignored and features in \code{X} with missing metadata information will show missing values.}
 
 \item{debug}{A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.}
 }
@@ -55,7 +55,7 @@ A list with the results of applying the TCA regression model to each of the feat
 \item{qvals}{An \code{m} by \code{1} matrix of the q-value (FDR-adjusted p-values) for each feature in the data.}
 }
 \description{
-TCA regression allows to test for several types of statistical relations between source-specific values and an outcome of interest. For example, in the context of bulk tissue-level DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tcareg} allows to test for cell-type-specific effects of methylation on an outcome of interest.
+TCA regression allows to test for several types of statistical relations between source-specific values and an outcome of interest. For example, in the context of tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tcareg} allows to test for cell-type-specific effects of methylation on an outcome of interest.
 }
 \details{
 TCA models \eqn{Z_{hj}^i} as the source-specific value of observation \eqn{i} in feature \eqn{j} coming from source \eqn{h} (see \link{tca} for more details). A TCA regression model tests an outcome \eqn{Y} for a linear statistical relationwith the source-specific values of a feature \eqn{j} by assuming: \deqn{Y_i = \sum_{h=1}^k \beta_{hj} Z_{hj}^i + e_i} where \eqn{e_i \sim N(0,\phi^2)}. In practice, \code{tcareg} fits this model using the conditional distribution \eqn{Y|X}, which, effectively, integrates over the latent \eqn{Z_{hj}^i} parameters. Statistical significance is then calculated using a likelihood ratio test (LRT). Note that the null and alternative models will be set automatically, except when \code{test == 'custom'}, in which case they will be set according to the user-specified null and alternative hypotheses.
@@ -83,13 +83,16 @@ k <- 3
 p1 <- 1
 p2 <- 1
 data <- test_data(n, m, k, p1, p2, 0.01)
-tca.mdl <- tca(data$X, data$W, data$C1, data$C2, refit_W = FALSE)
+tca.mdl <- tca(data$X, data$W, data$C1, data$C2)
 y <- matrix(rexp(n, rate=.1), ncol=1)
 # joint test:
 res1 <- tcareg(data$X, tca.mdl, y, test = "joint", save_results = FALSE)
 # custom test, testing for a joint effect of sources 1,2 while accounting for source 3
 res2 <- tcareg(data$X, tca.mdl, y, test = "custom", null_model = c("3"),
 alternative_model = c("1","2","3"), save_results = FALSE)
+# custom test, testing for a joint effect of sources 1,2 assuming no effects under the null
+res3 <- tcareg(data$X, tca.mdl, y, test = "custom", null_model = NULL,
+alternative_model = c("1","2"), save_results = FALSE)
 
 }
 \references{

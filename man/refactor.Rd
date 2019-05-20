@@ -4,9 +4,9 @@
 \alias{refactor}
 \title{Sparse principal component analysis using ReFACTor}
 \usage{
-refactor(X, k, sparsity = 500, C = NULL, sd_threshold = NULL,
-  num_comp = NULL, rand_svd = FALSE, log_file = "TCA.log",
-  debug = FALSE)
+refactor(X, k, sparsity = 500, C = NULL, C.remove = FALSE,
+  sd_threshold = 0.02, num_comp = NULL, rand_svd = FALSE,
+  log_file = "TCA.log", debug = FALSE)
 }
 \arguments{
 \item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported.}
@@ -15,9 +15,11 @@ refactor(X, k, sparsity = 500, C = NULL, sd_threshold = NULL,
 
 \item{sparsity}{A numeric value indicating the sparsity of the signal in the data (the number of signal rows).}
 
-\item{C}{An \code{n} by \code{p} design matrix of covariates to be accounted for. Note that \code{C} must include row names and column names and that NA values are currently not supported.}
+\item{C}{An \code{n} by \code{p} design matrix of covariates that will be accounted for in the feature selection step. Note that \code{C} must include row names and column names and that NA values are currently not supported; ; set \code{C} to be \code{NULL} if there are no such covariates.}
 
-\item{sd_threshold}{A numeric value indicating a standard deviation threshold to be used for excluding low-variance features in \code{X} (i.e. features with standard deviation lower than \code{sd_threshold} will be excluded).}
+\item{C.remove}{A logical value indicating whether the covariates in X should be accounted for not only in the feature selection step, but also in the final calculation of the principal components (i.e. if \code{C.remove == TRUE} then the selected features will be adjusted for the covariates in \code{C} prior to calculating principal components). Note that setting \code{C.remove} to be \code{TRUE} is desired when ReFACTor is intended to be used for correction in downstream analysis, whereas setting \code{C.remove} to be \code{FALSE} is desired when ReFACTor is merely used for capturing the sparse signals in the data (i.e. regardless of correction).}
+
+\item{sd_threshold}{A numeric value indicating a standard deviation threshold to be used for excluding low-variance features in \code{X} (i.e. features with standard deviation lower than \code{sd_threshold} will be excluded). Set \code{sd_threshold} to be \code{NULL} for turning off this filter. Note that removing features with very low variability tends to improve speed and performance.}
 
 \item{num_comp}{A numeric value indicating the number of ReFACTor components to return.}
 
@@ -34,12 +36,12 @@ A list with the estimated components of the ReFACTor model.
 \item{ranked_list}{A vector with the features in the data, ranked by their scores in the feature selection step of the algorithm; the top scoring features (set according to the argument \code{sparsity}) are used for calculating the ReFACTor components. Note that features that were excluded according to \code{sd_threshold} will not appear in this \code{ranked_list}.}
 }
 \description{
-Performs unsupervised feature selection followed by principal component analysis (PCA) under a row-sparse model using the ReFACTor algorithm. For example, in the context of bulk tissue-level DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{refactor} allows to capture the variation in cell-type composition, which was shown to be a dominant sparse signal in methylation data.
+Performs unsupervised feature selection followed by principal component analysis (PCA) under a row-sparse model using the ReFACTor algorithm. For example, in the context of tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{refactor} allows to capture the variation in cell-type composition, which was shown to be a dominant sparse signal in methylation data.
 }
 \details{
 ReFACTor is a two-step algorithm for sparse principal component analysis (PCA) under a row-sparse model. The algorithm performs an unsupervised feature selection by ranking the features based on their correlation with their values under a low-rank representation of the data, followed by a calculation of principal components using the top ranking features (ReFACTor components).
 
-Note that ReFACTor is tuned towards capturing sparse signals of the dominant sources of variation in the data. Therefore, in the presence of other potentially dominant factors in the data (i.e. beyond the variation of interest), these factors should be accounted for by including them as covariates (see argument \code{C}).
+Note that ReFACTor is tuned towards capturing sparse signals of the dominant sources of variation in the data. Therefore, in the presence of other potentially dominant factors in the data (i.e. beyond the variation of interest), these factors should be accounted for by including them as covariates (see argument \code{C}). In cases where the ReFACTor components are designated to be used as covariates in a downstream analysis alongside the covariates in \code{C} (e.g., in a standard regression analysis or in a TCA regression), it is advised to set the argument \code{C.remove} to be \code{TRUE}. This will adjust the selected features for the information in \code{C} prior to the calculation of the ReFACTor components, which will therefore capture only signals that is not present in \code{C} (and as a result may benefit the downstream analysis by potentially capturing more signals beyond the information in \code{C}).
 }
 \section{Note}{
  For very large input matrices it is advised to use random svd for speeding up the feature selection step (see argument \code{rand_svd}).

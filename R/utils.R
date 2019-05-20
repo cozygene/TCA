@@ -48,7 +48,7 @@ stop_cluster <- function(cl){
 
 get_num_cores <- function(num_cores){
   if (is.null(num_cores)){
-    return (detectCores() - 1)
+    return (max(1,detectCores() - 1))
   }else{
     return (num_cores)
   }
@@ -60,18 +60,18 @@ assert <- function (expr, error) {
 }
 
 
-tca.validate_input <- function(X, W, C1, C2, refit_W, refit_features, refit_t, parallel, num_cores, max_iters, log_file, debug){
+tca.validate_input <- function(X, W, C1, C2, refit_W, refit_W.features, refit_W.sparsity, refit_W.sd_threshold, parallel, num_cores, max_iters, log_file, debug){
 
   flog.debug("Validating input types...")
   assert(is.matrix(X), "X must be of class 'matrix'")
   assert(is.matrix(W), "W must be of class 'matrix'")
   assert(is.null(C1) | is.matrix(C1), "C1 must be of class 'matrix' or NULL")
   assert(is.null(C2) | is.matrix(C2), "C2 must be of class 'matrix' or NULL")
-  assert(is.null(refit_features) | is.character(refit_features), "refit_features must be of class 'character' or NULL")
+  assert(is.null(refit_W.features) | is.character(refit_W.features), "refit_W.features must be of class 'character' or NULL")
 
-  assert(is.numeric(refit_t), "refit_t must be of class 'logical' or 'numeric'")
+  assert(is.numeric(refit_W.sparsity), "refit_W.sparsity must be of class 'numeric'")
+  assert(is.numeric(refit_W.sd_threshold), "refit_W.sparsity must be of class 'numeric'")
   assert(is.numeric(max_iters), "max_iters must be of class 'numeric'")
-
   assert(is.logical(refit_W), "refit_W must be of class 'logical'")
   assert(is.logical(parallel), "parallel must be of class 'logical'")
   assert(is.logical(debug), "debug must be of class 'logical'")
@@ -84,7 +84,8 @@ tca.validate_input <- function(X, W, C1, C2, refit_W, refit_features, refit_t, p
   if (!is.null(C2)) assert(!is.null(rownames(C2)) | !is.null(colnames(C2)), "C2 must have row names and column names")
 
   flog.debug("Validating input conditions...")
-  if (refit_W) assert(refit_t <= nrow(X) , "argument refit_t must satisfy refit_t <= nrow(X)")
+  if (refit_W) assert(refit_W.sparsity <= nrow(X) , "argument refit_W.sparsity must satisfy refit_W.sparsity <= nrow(X)")
+  if (refit_W) assert(refit_W.sd_threshold >= 0 , "argument refit_W.sd_threshold must satisfy refit_W.sd_threshold >= 0")
 
   flog.debug("Validating matrix dimensions...")
   assert(dim(X)[2] == dim(W)[1] , "The number of columns in X is inconsistent with the number of rows in W")
@@ -145,13 +146,15 @@ tcareg.validate_input <- function(X, W, y, C3, test, null_model, alternative_mod
   flog.debug("Validating input stucture and values...")
   assert(!is.null(rownames(X)) | !is.null(colnames(X)), "X must have row names and column names")
   if (!is.null(C3)) assert(!is.null(rownames(C3)) | !is.null(colnames(C3)), "C3 must have row names and column names")
-  if (test == "custom") assert( (!is.null(alternative_model)) & (!is.null(null_model)), "arguments null_model and alternative_model cannot be NULL when test=custom")
-  if ( (!is.null(alternative_model)) | (!is.null(null_model))){
-    assert(test == "custom", "argument test must be set to 'custom' if arguments null_model and alternative_model are not NULL")
+  if (test == "custom") assert( (!is.null(alternative_model)), "argument alternative_model cannot be NULL when test=custom")
+  if ( (!is.null(alternative_model))){
+    assert(test == "custom", "argument test must be set to 'custom' if argument alternative_model is not NULL")
     # make sure that null_model and alternative_model include labels that exist in the column names of W
     assert(all(is.element(null_model, colnames(W))) & all(is.element(alternative_model, colnames(W))), "null_model and alternative_model must include values that exist in the column names of W")
-    # make sure the two models are nested
-    assert(length(setdiff(alternative_model, null_model)) > 0 & length(setdiff(null_model, alternative_model)) == 0, "null_model must be nested within alternative_model")
+    if ( (!is.null(null_model))){
+      # make sure the two models are nested
+      assert(length(setdiff(alternative_model, null_model)) > 0 & length(setdiff(null_model, alternative_model)) == 0, "null_model must be nested within alternative_model")
+    }
   }
 
   flog.debug("Validating matrix dimensions...")
