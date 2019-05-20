@@ -73,7 +73,7 @@ tca <- function(X, W, C1 = NULL, C2 = NULL, refit_W = FALSE, refit_W.features = 
     flog.info("Starting re-estimation of W...")
     if (is.null(refit_W.features)){
       flog.info("Performing feature selection using refactor...")
-      ref <- refactor(X, ncol(W), sparsity = refit_W.sparsity, C = cbind(C1,C2), sd_threshold = refit_W.sd_threshold, rand_svd = config$rand_svd, log_file = FALSE)
+      ref <- refactor(X, ncol(W), sparsity = refit_W.sparsity, C = cbind(C1,C2), sd_threshold = refit_W.sd_threshold, rand_svd = config$rand_svd, log_file = NULL)
       refit_W.features <- ref$ranked_list[1:refit_W.sparsity]
     }
     X_sub <- subset(X, subset = rownames(X) %in% refit_W.features)
