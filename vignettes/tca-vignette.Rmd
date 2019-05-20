@@ -2,6 +2,7 @@
 title: "Cell-type-specific resolution epigenetics using Tensor Composition Analysis in R"
 author: "Elior Rahmani"
 date: "`r Sys.Date()`"
+#output: pdf_document
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Cell-type-specific resolution epigenetics using TCA}
@@ -54,7 +55,7 @@ install.packages("TCA")
 TCA requires measurements or estimates of the cell-type proportions of the individuals in the data. As we later note, TCA allows to re-estimate the cell-type proportions; this can be particularly useful in cases where we can obtain only very noisy estimates of the cell-type proportions.
 
 Here, we use glint for estimating leukocyte proportions for each of the individuals in the whole-blood data following the Houseman et al. reference-based algorithm<sup>[4](#myfootnote4)</sup>. We run the following in the terminal / command line:
-```{shell}
+```
 python glint.py --datafile GSE42861_processed.txt --houseman --out GSE42861_processed
 ```
 This results in a file named 'GSE42861_processed.houseman_estimates.txt', which includes the cell-type proportion estimates.
@@ -71,7 +72,7 @@ In order to speed up the runtime of the following steps in this tutorial, we wil
 Specifically, we will consider only the 500 sites listed in the file named 'GSE42861_processed.subset.cpg_identifiers.txt' - 499 of these sites were arbitrarily selected, and one more site was included by design (cg11767757). The latter was verified in the TCA paper to demonstrate a CD4-specific association with RA using sorted CD4 cells and will be used for validating our analysis.
 
 In the terminal / command line run glint for subsetting the full data as follows:
-```{shell}
+```
 python glint.py --datafile GSE42861_processed.txt --include GSE42861_processed.subset.cpg_identifiers.txt --out GSE42861_processed.subset --txtsave
 ```
 This results in a file named 'GSE42861_processed.subset.txt', which includes the 500 pre-selected sites for the 658 individuals in the study.
@@ -195,7 +196,7 @@ abline(a=0, b=1); abline(h=-log10(0.05/500), col="red")
 ```
 This will output the following plot, which shows a single significant hit:
 
-![caption](../GSE42861/figs/fig1.png) 
+![Results of the CD4 marginl test presented by a qq-plot of the -log10(pvalues).](figs/fig1.png) 
 
 Ranking the p-values shows that the association found is with the methylation site cg11767757.
 ```{r eval = FALSE}
@@ -231,7 +232,7 @@ boxplot(hit.cd4~y, data = d, main="CD4 methylation in cg11767757",
 This results in the following boxplots:
 
 
-![caption](../GSE42861/figs/fig2.png) 
+![The distribution of the estimated CD4-specific cg11767757 methylation levels in RA cases and controls presented by boxplots.](figs/fig2.png) 
  
  
 #### Notes
