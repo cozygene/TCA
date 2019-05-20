@@ -48,10 +48,11 @@ W = dlmread('demo_W.txt');  % proportions matrix (individuals by cell types)
 pvals = TCA_EWAS(y, X, W, mus_hat, sigmas_hat, tau_hat);
 ```
 
+---
 
-#### License
+### License
 
-TCA is available under the <a href="https://opensource.org/licenses/GPL-3.0" target="_blank">GPL-3 license</a>.
+Both the R and Matlab version of TCA are available under the <a href="https://opensource.org/licenses/GPL-3.0" target="_blank">GPL-3 license</a>.
 
 <!---
 #### Citing TCA
@@ -62,11 +63,11 @@ Elior Rahmani, Regev Schweiger, Brooke Rhead, Lindsey A. Criswell, Lisa F. Barce
 -->
 
 
-#### Author
+### Author
 
 This software was developed by Elior Rahmani (elior.rahmani@gmail.com).
 
-#### Bug reports
+### Bug reports
 Please <a href="https://github.com/cozygene/TCA/issues/" target="_blank">open an issue</a>) for reporting bugs. If you are reporting bugs with the R version, please make sure to set the argument debug to TRUE and attach your log.
 
 
