@@ -10,7 +10,10 @@ TCA is available in both R and Matlab. Note that the Matlab version was used for
 
 [![Travis build status](https://travis-ci.com/cozygene/TCA.svg?branch=master)](https://travis-ci.org/cozygene/TCA)
  
-**The R package of TCA will soon be available on CRAN**
+The R package of TCA is available on CRAN. Run the following in R to install TCA:
+```R
+install.packages("TCA")
+```
 
 The full documentation of the TCA R package can be found <a href="https://github.com/cozygene/TCA/blob/master/manual.pdf" target="_blank">here</a>.
 
