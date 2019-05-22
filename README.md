@@ -14,7 +14,7 @@ TCA is available in both R and Matlab. Note that the Matlab version was used for
 
 The full documentation of the TCA R package can be found <a href="https://github.com/cozygene/TCA/blob/master/manual.pdf" target="_blank">here</a>.
 
-You can also find a full working example of TCA in <a href="https://github.com/cozygene/TCA" target="_blank">this vignette</a> about cell-type-specific resolution epigenetics using TCA in R.
+You can also find a full working example of TCA in <a href="https://cran.r-project.org/web/packages/TCA/vignettes/tca-vignette.html" target="_blank">this vignette</a> about cell-type-specific resolution epigenetics using TCA in R.
 
 <!--describe the config file.-->
 
