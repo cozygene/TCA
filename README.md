@@ -77,7 +77,7 @@ Please <a href="https://github.com/cozygene/TCA/issues/" target="_blank">open an
 
 ___
 
-<a name="myfootnote1">1</a>. Rahmani et al. "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology." Nature Communications, in press (2019).
+<a name="myfootnote1">1</a>. Rahmani et al. "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology." Nature Communications (2019).
 
 <a name="myfootnote2">2</a>. Houseman et al. "DNA methylation arrays as surrogate measures of cell mixture distribution." BMC bioinformatics (2012).
 
