@@ -10,11 +10,14 @@ TCA is available in both R and Matlab. Note that the Matlab version was used for
 
 [![Travis build status](https://travis-ci.com/cozygene/TCA.svg?branch=master)](https://travis-ci.org/cozygene/TCA)
  
-**The R package of TCA will soon be available on CRAN**
+The R package of TCA is available on CRAN. Run the following in R to install TCA:
+```R
+install.packages("TCA")
+```
 
 The full documentation of the TCA R package can be found <a href="https://github.com/cozygene/TCA/blob/master/manual.pdf" target="_blank">here</a>.
 
-You can also find a full working example of TCA in <a href="https://github.com/cozygene/TCA" target="_blank">this vignette</a> about cell-type-specific resolution epigenetics using TCA in R.
+You can also find a full working example of TCA in <a href="https://cran.r-project.org/web/packages/TCA/vignettes/tca-vignette.html" target="_blank">this vignette</a> about cell-type-specific resolution epigenetics using TCA in R.
 
 <!--describe the config file.-->
 
@@ -74,7 +77,7 @@ Please <a href="https://github.com/cozygene/TCA/issues/" target="_blank">open an
 
 ___
 
-<a name="myfootnote1">1</a>. Rahmani et al. "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology." Nature Communications, in press (2019).
+<a name="myfootnote1">1</a>. Rahmani et al. "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology." Nature Communications (2019).
 
 <a name="myfootnote2">2</a>. Houseman et al. "DNA methylation arrays as surrogate measures of cell mixture distribution." BMC bioinformatics (2012).
 
