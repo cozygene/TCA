@@ -9,7 +9,7 @@ test_that("subset the results of tca", {
   W <- res$W
   mus <- res$mus
   sigmas <- res$sigmas
-  tca.mdl <- tca(X, W, refit_W = FALSE, parallel = FALSE, log_file = NULL)
+  tca.mdl <- tca(X = X, W = W, refit_W = FALSE, parallel = FALSE, log_file = NULL)
   remove <- c("1","3","5")
   features <- setdiff(as.character(1:m),remove)
   tca.mdl.subset <- tcasub(tca.mdl, features, log_file = NULL)

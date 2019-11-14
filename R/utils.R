@@ -1,9 +1,10 @@
-
+#' @importFrom matrixStats rowVars
 #' @importFrom futile.logger flog.appender
 #' @importFrom futile.logger appender.tee
 #' @importFrom futile.logger appender.console
 #' @importFrom futile.logger flog.threshold
 #' @importFrom futile.logger flog.debug
+#' @importFrom futile.logger flog.info
 #' @importFrom parallel makeCluster
 #' @importFrom parallel clusterEvalQ
 #' @importFrom data.table fread
@@ -18,7 +19,7 @@
 #' @importFrom stats rnorm
 #' @importFrom stats runif
 #' @importFrom stats sd
-start_logger <- function(log_file, debug){
+start_logger <- function(log_file, debug, verbose = TRUE){
   config_level <- if (debug) "debug" else "default"
   Sys.setenv(R_CONFIG_ACTIVE = config_level)
   if (is.null(log_file)){
@@ -27,6 +28,7 @@ start_logger <- function(log_file, debug){
     invisible(flog.appender(appender.tee(log_file)))
   }
   invisible(flog.threshold(if(debug) "DEBUG" else "INFO"))
+  if (!verbose) (flog.threshold("ERROR"))
 }
 
 
@@ -60,14 +62,19 @@ assert <- function (expr, error) {
 }
 
 
-tca.validate_input <- function(X, W, C1, C2, refit_W, refit_W.features, refit_W.sparsity, refit_W.sd_threshold, parallel, num_cores, max_iters, log_file, debug){
+tca.validate_input <- function(X, W, C1, C1.map, C2, refit_W, refit_W.features, refit_W.sparsity, refit_W.sd_threshold, tau, parallel, num_cores, max_iters, log_file, debug){
 
   flog.debug("Validating input types...")
+
+  config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
+
   assert(is.matrix(X), "X must be of class 'matrix'")
   assert(is.matrix(W), "W must be of class 'matrix'")
   assert(is.null(C1) | is.matrix(C1), "C1 must be of class 'matrix' or NULL")
+  assert(is.null(C1.map) | is.matrix(C1.map), "C1.map must be of class 'matrix' or NULL")
   assert(is.null(C2) | is.matrix(C2), "C2 must be of class 'matrix' or NULL")
   assert(is.null(refit_W.features) | is.character(refit_W.features), "refit_W.features must be of class 'character' or NULL")
+  assert(is.null(tau) | is.numeric(tau), "tau must be of class 'numeric' or NULL")
 
   assert(is.numeric(refit_W.sparsity), "refit_W.sparsity must be of class 'numeric'")
   assert(is.numeric(refit_W.sd_threshold), "refit_W.sparsity must be of class 'numeric'")
@@ -101,6 +108,13 @@ tca.validate_input <- function(X, W, C1, C2, refit_W, refit_W.features, refit_W.
   assert(all(W >= 0), "The entries of W must be non-negative.")
   assert(all(abs(rowSums(W) - 1) < 0.0001), "Each row in W must sum up to 1.")
 
+  if (!is.null(C1.map)) assert(sum(C1.map == 1 | C1.map == 0) == ncol(C1.map)*nrow(C1.map), "The entries of C1.map must all be 0 or 1")
+
+  if (!is.null(tau)) assert(tau >= 0, "tau must be non-negative")
+
+  th <- config[["min_sd"]]**2
+  assert(sum(rowVars(X) < th) == 0, paste("X must not include features with variance less than ",as.character(th),sep=""))
+
 }
 
 
@@ -123,6 +137,9 @@ tcasub.validate_input <- function(tca.mdl, features, log_file, debug){
 tcareg.validate_input <- function(X, W, y, C3, test, null_model, alternative_model, save_results, output, sort_results, parallel, num_cores, log_file, features_metadata ,debug){
 
   flog.debug("Validating input type for tcareg...")
+
+  config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
+
   options <- c("marginal","marginal_conditional","joint","single_effect","custom")
   flog.debug("Validating input type...")
   assert(is.matrix(X), "argument X must be of class 'matrix'")
@@ -165,6 +182,9 @@ tcareg.validate_input <- function(X, W, y, C3, test, null_model, alternative_mod
   assert(all(colnames(X) == rownames(W)), "The order of observations in W (in the rows) must match the order of the observations in X (in the columns).")
   if (!is.null(C3)) assert(all(colnames(X) == rownames(C3)), "The order of observations in C3 (in the rows) must match the order of the observations in X (in the columns).")
   assert(all(colnames(X) == rownames(y)), "The order of observations in y (in the rows) must match the order of the observations in X (in the columns).")
+
+  th <- config[["min_sd"]]**2
+  assert(sum(rowVars(X) < th) == 0, paste("X must not include features with variance less than ",as.character(th),sep=""))
 
 }
 

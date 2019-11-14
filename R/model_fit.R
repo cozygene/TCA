@@ -1,10 +1,9 @@
 
 # Fits the TCA model
-tca.fit <- function(X, W, C1, C2, refit_W, parallel, num_cores, max_iters){
+tca.fit <- function(X, W, C1, C1.map, C2, refit_W, tau, parallel, num_cores, max_iters){
 
   flog.debug("Starting function 'tca.fit'...")
 
-  #config <- config::get()
   config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
 
   n <- nrow(X)
@@ -14,7 +13,7 @@ tca.fit <- function(X, W, C1, C2, refit_W, parallel, num_cores, max_iters){
   p2 <- ncol(C2)
 
   # init estimates
-  init <- init_means_vars(colnames(C1), colnames(C2), colnames(X), colnames(W))
+  init <- init_means_vars(colnames(C1), colnames(C2), colnames(X), colnames(W), tau)
   mus_hat <- init[["mus_hat"]]
   sigmas_hat <- init[["sigmas_hat"]]
   deltas_hat <- init[["deltas_hat"]]
@@ -27,7 +26,7 @@ tca.fit <- function(X, W, C1, C2, refit_W, parallel, num_cores, max_iters){
     if (refit_W) flog.info("Iteration %s out of %s external iterations (fitting all parameters including W)...", iter, max_iters)
 
     flog.info("Fitting means and variances...")
-    res <- tca.fit_means_vars(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_hat, C1, gammas_hat, max_iters, parallel, num_cores)
+    res <- tca.fit_means_vars(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_hat, C1, gammas_hat, C1.map, tau, max_iters, parallel, num_cores)
     mus_hat <- res[["mus_hat"]]
     sigmas_hat <- res[["sigmas_hat"]]
     deltas_hat <- res[["deltas_hat"]]
@@ -61,7 +60,7 @@ tca.fit <- function(X, W, C1, C2, refit_W, parallel, num_cores, max_iters){
 }
 
 
-init_means_vars <- function(C1_names, C2_names, feature_ids, source_ids){
+init_means_vars <- function(C1_names, C2_names, feature_ids, source_ids, tau){
   #config <- config::get()
   config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
   k <- length(source_ids)
@@ -79,7 +78,11 @@ init_means_vars <- function(C1_names, C2_names, feature_ids, source_ids){
   sigmas_hat <- matrix(0, nrow=m, ncol=k)
   deltas_hat <- matrix(0, nrow=m, ncol=p2)
   gammas_hat <- matrix(0, nrow=m, ncol=p1*k)
-  tau_hat <- config[["tau_hat_init"]]
+  if (is.null(tau)){
+    tau_hat <- config[["tau_hat_init"]]
+  }else{
+    tau_hat <- tau
+  }
   # set row and column names
   rownames(mus_hat) <- feature_ids
   colnames(mus_hat) <- source_ids
@@ -100,7 +103,7 @@ init_means_vars <- function(C1_names, C2_names, feature_ids, source_ids){
 #' @importFrom pracma lsqlincon
 #' @importFrom nloptr nloptr
 #' @importFrom matrixStats colVars
-tca.fit_means_vars <- function(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_hat, C1, gammas_hat, max_iters, parallel, num_cores){
+tca.fit_means_vars <- function(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_hat, C1, gammas_hat, C1.map, tau, max_iters, parallel, num_cores){
 
   flog.debug("Starting function 'tca.fit_means_vars'...")
 
@@ -136,11 +139,17 @@ tca.fit_means_vars <- function(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_ha
     lb[1:k] <- if(is.null(config[["mu_min"]])) min(X) else config[["mu_min"]]
     lb[1:k] <- lb[1:k] + config[["mu_epsilon"]]
 
+    if (p1){
+      # All zeros will get ub and lb set to 0 (i.e. effect sizes will not be estimated); use a small value (config[["nloptr_opts_xtol_rel"]]) for stability; otherwise nloptr may return an error in some cases.
+      ub[seq(k+p2+1,k+p2+p1*k)] <- Reshape(C1.map,p1*k,1)*config[["lsqlincon_inf"]] + config[["nloptr_opts_xtol_rel"]]
+      lb[seq(k+p2+1,k+p2+p1*k)] <- Reshape(C1.map,p1*k,1)*(-config[["lsqlincon_inf"]]) - config[["nloptr_opts_xtol_rel"]]
+    }
+
     flog.debug("Calculate W_norms and related quantities")
     if (sum(colSums(mus_hat)) == 0){
       # Use the following for getting initial estimates of mus, deltas, gammas; under the assumptions that tau=0 and sigmas_{1j},...,sigmas_{kj} for each j.
       W_norms <- rowSums(W**2)**0.5
-      # Since W_norms is the same for all features in this case can already calculate thesethe following quantities
+      # Since W_norms is the same for all features in this case can already calculate the following quantities
       W_tilde <- W/t(repmat(W_norms,k,1))
       C1_tilde <- if (p1>0) C1_/t(repmat(W_norms,k*p1,1)) else C1_
       C2_tilde <- if (p2>0) C2/t(repmat(W_norms,p2,1)) else C2
@@ -251,18 +260,20 @@ tca.fit_means_vars <- function(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_ha
     }
 
     # (2.3) Estimate tau
-    flog.debug("Estimate tau.")
-    lb <- config[["min_sd"]]
-    ub <- Inf
-    tau_hat = nloptr(x0=tau_hat,
-                     eval_f = function(x,U,W_squared,sigmas_hat,const) minus_log_likelihood_tau(U,W_squared,sigmas_hat,const,x),
-                     lb = lb,
-                     ub = ub,
-                     opts = nloptr_opts,
-                     U = U,
-                     W_squared = W_squared,
-                     sigmas_hat = sigmas_hat,
-                     const = const)$solution
+    if (is.null(tau)){
+      flog.debug("Estimate tau.")
+      lb <- config[["min_sd"]]
+      ub <- Inf
+      tau_hat = nloptr(x0=tau_hat,
+                       eval_f = function(x,U,W_squared,sigmas_hat,const) minus_log_likelihood_tau(U,W_squared,sigmas_hat,const,x),
+                       lb = lb,
+                       ub = ub,
+                       opts = nloptr_opts,
+                       U = U,
+                       W_squared = W_squared,
+                       sigmas_hat = sigmas_hat,
+                       const = const)$solution
+    }
 
     flog.debug("Test for convergence.")
     ll_new <- -minus_log_likelihood_tau(U,W_squared,sigmas_hat,const,tau_hat)[[1]]
@@ -424,7 +435,7 @@ estimate_Z <- function(X, W, mus_hat, sigmas_hat, tau_hat, C2, deltas_hat, C1, g
     W_prime[[i]] = tcrossprod(W[i,],W[i,])/(tau_hat**2)
   }
   #if (m==1) deltas_hat <- t(as.matrix(deltas_hat))
-  C2_prime <- (tcrossprod(C2,deltas_hat) + X)/(tau_hat**2)
+  C2_prime <- (X - tcrossprod(C2,deltas_hat))/(tau_hat**2)
   cl <- if (parallel) init_cluster(num_cores) else NULL
   if (parallel) clusterExport(cl, c("W","mus_hat","sigmas_hat","tau_hat","C1","gammas_hat","W_prime","C2_prime","estimate_Z_j"), envir=environment())
   # Estimate Z
@@ -479,32 +490,44 @@ tcareg.fit <- function(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_
 
 
 tcareg.fit_joint <- function(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, parallel, num_cores, single_effect){
+  config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
   k <- ncol(W)
   mdl1 <- tcareg.optimize(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, 1:k, parallel, num_cores, single_effect)
   ll1 <- mdl1[["ll"]]
-  d <- data.frame(y,C3)
-  mdl0 <- lm(y~.,data = d) # the null log-likelihood under the model y ~ C3 (i.e. the null under the case of no source-specific effects)
+  #d <- data.frame(y,C3)
+  #mdl0 <- lm(y~.,data = d) # the null log-likelihood under the model y ~ C3 (i.e. the null under the case of no source-specific effects)
+  if (ncol(C3) == 0){
+    mdl0 <- lm(y ~ 1)
+  }else{
+    mdl0 <- lm(y~.,data = data.frame(C3))
+  }
   ll0 <- numeric(length(mdl1[["ll"]])) + as.numeric(logLik(mdl0))
   df <- if(single_effect) 1 else ncol(W)
   lrt <- lrt.test(ll0, mdl1[["ll"]], df = df)
-  qvals <- p.adjust(lrt[["pvals"]], method = "BH")
+  qvals <- p.adjust(lrt[["pvals"]], method = config[["fdr_method"]])
   return( list("phi" = mdl1[["phi"]], "beta" = mdl1[["beta"]], "intercept" = mdl1[["intercept"]], "alpha" = mdl1[["alpha"]], "null_ll" = ll0, "alternative_ll" = ll1, "pvals" = lrt[["pvals"]], "qvals" = qvals, "stats" = lrt[["stats"]], "df" = df) )
 }
 
 
 tcareg.fit_marginal <- function(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, parallel, num_cores){
+  config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
   m <- ncol(X)
   k <- ncol(W)
   results <- list()
-  d <- data.frame(y,C3)
-  mdl0 <- lm(y~.,data = d) # the null log-likelihood under the model y ~ C3 (i.e. the null under the case of no source-specific effects)
+  #d <- data.frame(y,C3)
+  #mdl0 <- lm(y~.,data = d) # the null log-likelihood under the model y ~ C3 (i.e. the null under the case of no source-specific effects)
+  if (ncol(C3) == 0){
+    mdl0 <- lm(y ~ 1)
+  }else{
+    mdl0 <- lm(y~.,data = data.frame(C3))
+  }
   for (h in 1:k){
     mdl1 <- tcareg.optimize(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, h, parallel, num_cores, FALSE)
     ll1 <- mdl1[["ll"]]
     ll0 <- numeric(length(mdl1[["ll"]])) + as.numeric(logLik(mdl0))
     df <- 1
     lrt <- lrt.test(ll0, ll1, df = df)
-    qvals <- p.adjust(lrt[["pvals"]], method = "BH")
+    qvals <- p.adjust(lrt[["pvals"]], method = config[["fdr_method"]])
     results[[length(results)+1]] = list("phi" = mdl1[["phi"]], "beta" = mdl1[["beta"]], "intercept" = mdl1[["intercept"]], "alpha" = mdl1[["alpha"]], "null_ll" = ll0, "alternative_ll" = ll1, "pvals" = lrt[["pvals"]], "qvals" = qvals, "stats" = lrt[["stats"]], "df" = df)
   }
   return(results)
@@ -512,6 +535,7 @@ tcareg.fit_marginal <- function(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1
 
 
 tcareg.fit_marginal_conditional <- function(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, parallel, num_cores){
+  config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
   m <- ncol(X)
   k <- ncol(W)
   results <- list()
@@ -522,7 +546,7 @@ tcareg.fit_marginal_conditional <- function(X, y, W, mus_hat, sigmas_hat, C2, de
     ll0 <- mdl0[["ll"]]
     df <- 1
     lrt <- lrt.test(ll0, ll1, df = df)
-    qvals <- p.adjust(lrt[["pvals"]], method = "BH")
+    qvals <- p.adjust(lrt[["pvals"]], method = config[["fdr_method"]])
     results[[length(results)+1]] = list("phi" = mdl1[["phi"]], "beta" = mdl1[["beta"]], "intercept" = mdl1[["intercept"]], "alpha" = mdl1[["alpha"]], "null_ll" = ll0, "alternative_ll" = ll1, "pvals" = lrt[["pvals"]], "qvals" = qvals, "stats" = lrt[["stats"]], "df" = df)
   }
   return(results)
@@ -530,9 +554,15 @@ tcareg.fit_marginal_conditional <- function(X, y, W, mus_hat, sigmas_hat, C2, de
 
 
 tcareg.fit_custom <- function(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, parallel, num_cores, null_model, alternative_model){
+  config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
   if (is.null(null_model)){
-    d <- data.frame(y,C3)
-    mdl0 <- lm(y~.,data = d) # the null log-likelihood under the model y ~ C3 (i.e. the null under the case of no source-specific effects)
+    #d <- data.frame(y,C3)
+    #mdl0 <- lm(y~.,data = d) # the null log-likelihood under the model y ~ C3 (i.e. the null under the case of no source-specific effects)
+    if (ncol(C3) == 0){
+      mdl0 <- lm(y ~ 1)
+    }else{
+      mdl0 <- lm(y~.,data = data.frame(C3))
+    }
     ll0 <- numeric(ncol(X)) + as.numeric(logLik(mdl0))
   }else{
     mdl0 <- tcareg.optimize(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, gammas_hat, tau_hat, C3, null_model, parallel, num_cores, FALSE)
@@ -542,7 +572,7 @@ tcareg.fit_custom <- function(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, 
   ll1 <- mdl1[["ll"]]
   df <- length(alternative_model) - length(null_model)
   lrt <- lrt.test(ll0, ll1, df = df)
-  qvals <- p.adjust(lrt[["pvals"]], method = "BH")
+  qvals <- p.adjust(lrt[["pvals"]], method = config[["fdr_method"]])
   return( list("phi" = mdl1[["phi"]], "beta" = mdl1[["beta"]], "intercept" = mdl1[["intercept"]], "alpha" = mdl1[["alpha"]], "null_ll" = ll0, "alternative_ll" = ll1, "pvals" = lrt[["pvals"]], "qvals" = qvals, "stats" = lrt[["stats"]], "df" = df) )
 }
 
@@ -574,8 +604,13 @@ tcareg.optimize <- function(X, y, W, mus_hat, sigmas_hat, C2, deltas_hat, C1, ga
   # X0 <- get_initial_estimates(Z_hat, y, C3, mdl, lambda, single_effect, parallel, num_cores)
 
   # Set initial estimates for phi and alpha for each feature j using the model y~C3; initialize all betas with 0
-  d <- data.frame(y,C3)
-  mdl0 <- lm(y~.,data = d)
+  #d <- data.frame(y,C3)
+  #mdl0 <- lm(y~.,data = d)
+  if (p3 == 0){
+    mdl0 <- lm(y ~ 1)
+  }else{
+    mdl0 <- lm(y~.,data = data.frame(C3))
+  }
   X0 <- list("phi0" = matrix(sqrt(sum(mdl0$residuals**2)/(n-1)),m,1),
              "beta0" = matrix(0,m,num_betas),
              "alpha0" = repmat(t(as.matrix(mdl0$coefficients)),m,1) )
@@ -655,7 +690,8 @@ conditional_model_minus_log_likelihood <- function(x, y, C3, const, sigmas_squar
   alpha_j = x[-1:-(1+l)]
   s1 <- beta_j**2
   s2 <- phi**2 + sum((s1)*(sigmas_squared_j[mdl])) - (tcrossprod(e2,t(beta_j))**2)/e1 # sigma_ij_tilde_squared
-  s3 <- tcrossprod(C3,t(alpha_j)) + tcrossprod(e4,t(beta_j)) - y  # mu_ij_tilde - y
+  #s3 <- tcrossprod(C3,t(alpha_j)) + tcrossprod(e4,t(beta_j)) - y  # mu_ij_tilde - y
+  s3 <- C3 %*% as.matrix(alpha_j) + tcrossprod(e4,t(beta_j)) - y  # mu_ij_tilde - y
   s4 <- s3/s2
   s5 <- s3*s4
   s6 <- 1/s2

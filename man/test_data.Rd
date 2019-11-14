@@ -4,7 +4,7 @@
 \alias{test_data}
 \title{Generate test data}
 \usage{
-test_data(n, m, k, p1, p2, tau, log_file = "TCA.log")
+test_data(n, m, k, p1, p2, tau, log_file = "TCA.log", verbose = TRUE)
 }
 \arguments{
 \item{n}{The number of observations to simulate.}
@@ -19,7 +19,9 @@ test_data(n, m, k, p1, p2, tau, log_file = "TCA.log")
 
 \item{tau}{The variance of the i.i.d. component of variation to add on top of the simulated mixture values.}
 
-\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file.}
+\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.}
+
+\item{verbose}{A logical value indicating whether to print logs.}
 }
 \value{
 A list with the simulated data and parameters.

@@ -1,7 +1,7 @@
 Package: TCA
 Type: Package
 Title: Tensor Composition Analysis
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: person("Elior", "Rahmani", email = "elior.rahmani@gmail.com", role = c("aut", "cre"))
 Author: Elior Rahmani [aut, cre]
 Maintainer: Elior Rahmani <elior.rahmani@gmail.com>
@@ -9,13 +9,13 @@ Description: Tensor Composition Analysis (TCA) allows the deconvolution of two-d
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: config, data.table, futile.logger, gmodels, Matrix, matrixcalc, matrixStats, nloptr, parallel, pbapply, pracma, rsvd, stats, quadprog
+Imports: config, data.table, futile.logger, gmodels, Matrix, matrixcalc, matrixStats, nloptr, parallel, pbapply, pracma, rsvd, stats, quadprog, glmnet
 RoxygenNote: 6.1.1
 Depends: R (>= 3.4.0)
 Suggests: 
     testthat,
     knitr,
     rmarkdown
-URL: https://www.biorxiv.org/content/10.1101/437368v1
+URL: https://www.nature.com/articles/s41467-019-11052-9
 BugReports: https://github.com/cozygene/TCA/issues
 VignetteBuilder: knitr

@@ -5,10 +5,10 @@
 \title{Extracting hidden 3D signals from 2D input}
 \usage{
 tensor(X, tca.mdl, parallel = FALSE, num_cores = NULL,
-  log_file = "TCA.log", debug = FALSE)
+  log_file = "TCA.log", debug = FALSE, verbose = TRUE)
 }
 \arguments{
-\item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported.}
+\item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.}
 
 \item{tca.mdl}{The value returned by applying the function \code{tca} to \code{X}.}
 
@@ -16,9 +16,11 @@ tensor(X, tca.mdl, parallel = FALSE, num_cores = NULL,
 
 \item{num_cores}{A numeric value indicating the number of cores to use (activated only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.}
 
-\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file.}
+\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.}
 
 \item{debug}{A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.}
+
+\item{verbose}{A logical value indicating whether to print logs.}
 }
 \value{
 A list with the estimated source-specific values. The first element in the list is an \code{m} by \code{n} matrix (features by observations) corresponding to the estimated values coming from the first source, the second element in the list is another \code{m} by \code{n} matrix (features by observations) corresponding to the estimated values coming from the second source and so on.
@@ -31,7 +33,7 @@ See \link{tca} for notations and details about the TCA model. Given estimates of
 }
 \examples{
 data <- test_data(50, 20, 3, 2, 2, 0.01)
-tca.mdl <- tca(data$X, data$W, data$C1, data$C2)
+tca.mdl <- tca(X = data$X, W = data$W, C1 = data$C1, C2 = data$C2)
 Z_hat <- tensor(data$X, tca.mdl)
 
 }

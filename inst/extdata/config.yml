@@ -23,6 +23,7 @@ default:
   sep: "," # separator for output files
   show_progress: FALSE
   verbose: FALSE
+  fdr_method: "BY"  # can use any method that is provided by p.adjust
   # more configs:
   lambda: 0.1 # weight for L2 regularization to handle co-linearily in the association testing
 

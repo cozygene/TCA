@@ -2,19 +2,22 @@
 #'
 #' @description Fits the TCA model for an input matrix of observations coming from a mixture of \code{k} sources, under the assumption that each observation is a mixture of unique source-specific values (in each feature in the data). For example, in the context of tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tca} allows to model the methylation of each individual as a mixture of cell-type-specific methylation levels that are unique to the individual.
 #'
-#' @param X An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported.
+#' @param X An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.
 #' @param W An \code{n} by \code{k} matrix of weights - the weights of \code{k} sources for each of the \code{n} mixtures (observations). All the weights must be positive and each row, corresponding to the weights of a single observation, must sum up to 1. Note that \code{W} must include row names and column names and that NA values are currently not supported. In case where only initial estimates of \code{W} are available, \code{tca} can be set to re-estimate \code{W} (see \code{refit_W}).
 #' @param C1 An \code{n} by \code{p1} design matrix of covariates that may affect the hidden source-specific values (possibly a different effect on each source). Note that \code{C1} must include row names and column names and should not include an intercept term. NA values are currently not supported.
+#' @param C1.map An \code{p1} by \code{k} matrix of 0/1 values, indicating for each of the \code{p1} covariates in \code{C1} whether to consider its potential effects on the values of each of the \code{k} sources (e.g., if position \code{i,j} in \code{C1.map} is 1 then the potential effect of the \code{i}-th covariate in \code{C1} on the {j}-th source will be considered). If \code{C1.map == NULL} then effects for all covariates in \code{C1} in each of the sources will be considered.
 #' @param C2 An \code{n} by \code{p2} design matrix of covariates that may affect the mixture (i.e. rather than directly the sources of the mixture; for example, variables that capture biases in the collection of the measurements). Note that \code{C2} must include row names and column names and should not include an intercept term. NA values are currently not supported.
 #' @param refit_W A logical value indicating whether to re-estimate the input \code{W} under the TCA model.
 #' @param refit_W.features A vector with the names of the features in \code{X} to consider when re-estimating \code{W} (i.e. when \code{refit_W == TRUE}). This is useful since oftentimes just a subset of the features in \code{X} will be informative for estimating \code{W}. If \code{refit_W.features == NULL} then the ReFACTor algorithm will be used for performing feature selection (see also \code{refit_W.sparsity, refit_W.sd_threshold}).
 #' @param refit_W.sparsity A numeric value indicating the number of features to select using the ReFACTor algorithm when re-estimating \code{W} (activated only if \code{refit_W == TRUE} and \code{refit_W.features == NULL}). Note that \code{refit_W.sparsity} must be lower or equal to the number of features in \code{X}. For more information, see the argument \code{sparsity} in \link{refactor}.
 #' @param refit_W.sd_threshold A numeric value indicating a standard deviation threshold to be used for excluding low-variance features in \code{X} (activated only if \code{refit_W == TRUE} and \code{refit_W.features == NULL}). For more information, see the argument \code{sd_threshold} in \link{refactor}.
+#' @param tau A non-negative numeric value of the standard deviation of the measurement noise (i.e. the i.i.d. component of variation in the model). If \code{tau == NULL} then \code{tca} will estimate \code{tau}.
 #' @param parallel A logical value indicating whether to use parallel computing (possible when using a multi-core machine).
 #' @param num_cores A numeric value indicating the number of cores to use (activated only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.
 #' @param max_iters A numeric value indicating the maximal number of iterations to use in the optimization of the TCA model (\code{max_iters} iterations will be used as long as the optimization does not converge in earlier iterations).
-#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file.
+#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.
 #' @param debug A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.
+#' @param verbose A logical value indicating whether to print logs.
 #'
 #' @importFrom futile.logger flog.info
 #' @importFrom pbapply pboptions
@@ -32,13 +35,13 @@
 #' \item{W}{An \code{n} by \code{k} matrix of weights. If \code{refit_W == TRUE} then this is the re-estimated \code{W}; otherwise this is the input \code{W}}
 #' \item{mus_hat}{An \code{m} by \code{k} matrix of estimates for the mean of each source in each feature.}
 #' \item{sigmas_hat}{An \code{m} by \code{k} matrix of estimates for the standard deviation of each source in each feature.}
-#' \item{tau_hat}{An estimate of the standard deviation of the i.i.d. component of variation in \code{X}.}
+#' \item{tau_hat}{An estimate of the standard deviation of the i.i.d. component of variation in \code{X}. If an input value was provided for \code{tau} (i.e. \code{tau != NULL}) then \code{tau_hat == tau}.}
 #' \item{gammas_hat}{An \code{m} by \code{k*p1} matrix of the estimated effects of the \code{p1} factors in \code{C1} on each of the \code{m} features in \code{X}, where the first \code{p1} columns are the source-specific effects of the \code{p1} factors on the first source, the following \code{p1} columns are the source-specific effects on the second source and so on.}
 #' \item{deltas_hat}{An \code{m} by \code{p2} matrix of the estimated effects of the \code{p2} factors in \code{C2} on the mixture values of each of the \code{m} features in \code{X}.}
 #'
 #' @examples
 #' data <- test_data(100, 20, 3, 1, 1, 0.01)
-#' tca.mdl <- tca(data$X, data$W, data$C1, data$C2)
+#' tca.mdl <- tca(X = data$X, W = data$W, C1 = data$C1, C2 = data$C2)
 #'
 #' @section Note: The function \code{tca} may require a long running time when the input matrix \code{X} is very large; to alleviate this, it is strongly advised to use the \code{parallel} argument, given that a multi-core machine is available.
 #'
@@ -46,17 +49,16 @@
 #' @references Rahmani E, Zaitlen N, Baran Y, Eng C, Hu D, Galanter J, Oh S, Burchard EG, Eskin E, Zou J, Halperin E. Sparse PCA corrects for cell type heterogeneity in epigenome-wide association studies. Nature Methods 2016.
 #'
 #' @export tca
-tca <- function(X, W, C1 = NULL, C2 = NULL, refit_W = FALSE, refit_W.features = NULL, refit_W.sparsity = 500, refit_W.sd_threshold = 0.02, parallel = FALSE, num_cores = NULL, max_iters = 10, log_file = "TCA.log", debug = FALSE){
+tca <- function(X, W, C1 = NULL, C1.map = NULL, C2 = NULL, refit_W = FALSE, refit_W.features = NULL, refit_W.sparsity = 500, refit_W.sd_threshold = 0.02, tau = NULL, parallel = FALSE, num_cores = NULL, max_iters = 10, log_file = "TCA.log", debug = FALSE, verbose = TRUE){
 
-  start_logger(log_file, debug)
+  start_logger(log_file, debug, verbose)
 
   flog.info("Starting tca...")
 
-  # set options for the progress bars
-  #config <- config::get()
   config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
 
-  op <- pboptions(nout = config$nout, type = config[["type"]])
+  # progress bar options
+  op <- if (verbose) pboptions(nout = config$nout, type = config[["type"]]) else pboptions(nout = config$nout, type = "none")
 
   X <- if (is.matrix(X)) X else as.matrix(X)
   W <- if (is.matrix(W)) W else as.matrix(W)
@@ -64,27 +66,30 @@ tca <- function(X, W, C1 = NULL, C2 = NULL, refit_W = FALSE, refit_W.features = 
   C2 <- if (is.matrix(C2) | is.null(C2)) C2 else as.matrix(C2)
 
   flog.info("Validating input...")
-  tca.validate_input(X, W, C1, C2, refit_W, refit_W.features, refit_W.sparsity, refit_W.sd_threshold, parallel, num_cores, max_iters, log_file, debug)
+  tca.validate_input(X, W, C1, C1.map, C2, refit_W, refit_W.features, refit_W.sparsity, refit_W.sd_threshold, tau, parallel, num_cores, max_iters, log_file, debug)
   if (is.null(C1)) C1 <- matrix(0, nrow=ncol(X), ncol=0)
   if (is.null(C2)) C2 <- matrix(0, nrow=ncol(X), ncol=0)
+
+  C1.map <- if (is.null(C1.map)) matrix(1,ncol(C1),ncol(W)) else C1.map
 
   msg <- "Fitting the TCA model..."
   if (refit_W){
     flog.info("Starting re-estimation of W...")
     if (is.null(refit_W.features)){
       flog.info("Performing feature selection using refactor...")
-      ref <- refactor(X, ncol(W), sparsity = refit_W.sparsity, C = cbind(C1,C2), sd_threshold = refit_W.sd_threshold, rand_svd = config$rand_svd, log_file = NULL)
+      #ref <- refactor(X, ncol(W), sparsity = refit_W.sparsity, C = if (ncol(cbind(C1,C2))) cbind(C1,C2) else NULL, sd_threshold = refit_W.sd_threshold, rand_svd = config$rand_svd, log_file = NULL)
+      ref <- refactor.run(X = X, k = ncol(W), sparsity = refit_W.sparsity, C = if (ncol(cbind(C1,C2))) cbind(C1,C2) else NULL, C.remove = FALSE, sd_threshold = refit_W.sd_threshold, num_comp = NULL, rand_svd = config$rand_svd, log_file = NULL, logger_on = FALSE, verbose = verbose)
       refit_W.features <- ref$ranked_list[1:refit_W.sparsity]
     }
     X_sub <- subset(X, subset = rownames(X) %in% refit_W.features)
     flog.info("Fitting the TCA model using the selected features for re-estimating W...")
-    mdl0 <- tca.fit(t(X_sub), W, C1, C2, refit_W = TRUE, parallel, num_cores, max_iters)
+    mdl0 <- tca.fit(X = t(X_sub), W = W, C1 = C1, C1.map = C1.map, C2 = C2, refit_W = TRUE, tau = tau, parallel = parallel, num_cores = num_cores, max_iters = max_iters)
     W <- mdl0[["W"]]
     msg <- "Fitting the TCA model given the updated W..."
   }
   X <- t(X)
   flog.info(msg)
-  mdl <- tca.fit(X, W, C1, C2, refit_W = FALSE, parallel, num_cores, max_iters)
+  mdl <- tca.fit(X = X, W = W, C1 = C1, C1.map = C1.map, C2 = C2, refit_W = FALSE, tau = tau, parallel = parallel, num_cores = num_cores, max_iters = max_iters)
   W <- mdl[["W"]]
   mus_hat <- mdl[["mus_hat"]]
   sigmas_hat <- mdl[["sigmas_hat"]]
@@ -102,8 +107,9 @@ tca <- function(X, W, C1 = NULL, C2 = NULL, refit_W = FALSE, refit_W.features = 
 #'
 #' @param tca.mdl The value returned by applying the function \code{tca} to some data matrix\code{X}.
 #' @param features A vector with the identifiers of the features to extract (as they appear in the rows of \code{X}).
-#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file.
+#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.
 #' @param debug A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.
+#' @param verbose A logical value indicating whether to print logs.
 #'
 #' @importFrom futile.logger flog.info
 #'
@@ -119,15 +125,16 @@ tca <- function(X, W, C1 = NULL, C2 = NULL, refit_W = FALSE, refit_W.features = 
 #'
 #' @examples
 #' data <- test_data(50, 20, 3, 0, 0, 0.01)
-#' tca.mdl <- tca(data$X, data$W)
+#' tca.mdl <- tca(X = data$X, W = data$W)
 #' tca.mdl.subset <- tcasub(tca.mdl, rownames(data$X)[1:10])
 #' y <- matrix(rexp(50, rate=.1), ncol=1)
 #' # run tcareg test with an outcome y:
 #' res <- tcareg(data$X[1:10,], tca.mdl.subset, y, test = "joint", save_results = FALSE)
 #'
 #' @export tcasub
-tcasub <- function(tca.mdl, features, log_file = "TCA.log", debug = FALSE){
-  start_logger(log_file, debug)
+tcasub <- function(tca.mdl, features, log_file = "TCA.log", debug = FALSE, verbose = TRUE){
+
+  start_logger(log_file, debug, verbose)
   flog.info("Starting tcasub...")
   tcasub.validate_input(tca.mdl, features, log_file, debug)
   flog.info("Finished tcasub.")
@@ -143,6 +150,7 @@ tcasub <- function(tca.mdl, features, log_file = "TCA.log", debug = FALSE){
     gammas_hat <- as.matrix(tca.mdl[["gammas_hat"]][features,])
   }
   return( list("W" = tca.mdl[["W"]], "mus_hat" = mus_hat, "sigmas_hat" = sigmas_hat, "tau_hat" = tca.mdl[["tau_hat"]], "deltas_hat" = deltas_hat, "gammas_hat" = gammas_hat, "C1" = as.matrix(tca.mdl[["C1"]]), "C2" = as.matrix(tca.mdl[["C2"]])) )
+
 }
 
 
@@ -150,12 +158,13 @@ tcasub <- function(tca.mdl, features, log_file = "TCA.log", debug = FALSE){
 #'
 #' @description Estimates 3-dimensional signals (features by observations by sources) from input of mixtures (features by observations), under the assumption of the TCA model that each observation is a mixture of unique source-specific values (in each feature in the data). For example, in the context of  tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tensor} allows to estimate a tensor of cell-type-specific levels for each individual in each methylation site (i.e. a tensor of methylation sites by individuals by cell types).
 #'
-#' @param X An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported.
+#' @param X An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.
 #' @param tca.mdl The value returned by applying the function \code{tca} to \code{X}.
 #' @param parallel A logical value indicating whether to use parallel computing (possible when using a multi-core machine).
 #' @param num_cores A numeric value indicating the number of cores to use (activated only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.
-#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file.
+#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.
 #' @param debug A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.
+#' @param verbose A logical value indicating whether to print logs.
 #'
 #' @details See \link{tca} for notations and details about the TCA model. Given estimates of the parameters of the model (given by \link{tca}), \code{tensor} uses the conditional distribution \eqn{Z_{hj}^i|X_{ji}} for estimating the \eqn{k} source-specific levels of each observation \eqn{i} in each feature \eqn{j}.
 #
@@ -163,15 +172,20 @@ tcasub <- function(tca.mdl, features, log_file = "TCA.log", debug = FALSE){
 #'
 #' @examples
 #' data <- test_data(50, 20, 3, 2, 2, 0.01)
-#' tca.mdl <- tca(data$X, data$W, data$C1, data$C2)
+#' tca.mdl <- tca(X = data$X, W = data$W, C1 = data$C1, C2 = data$C2)
 #' Z_hat <- tensor(data$X, tca.mdl)
 #'
 #' @references Rahmani E, Schweiger R, Rhead B, Criswell LA, Barcellos LF, Eskin E, Rosset S, Sankararaman S, Halperin E. Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology. Nature Communications 2018.
 #'
 #' @export tensor
-tensor <- function(X, tca.mdl, parallel = FALSE, num_cores = NULL, log_file = "TCA.log", debug = FALSE){
+tensor <- function(X, tca.mdl, parallel = FALSE, num_cores = NULL, log_file = "TCA.log", debug = FALSE, verbose = TRUE){
 
-  start_logger(log_file, debug)
+  start_logger(log_file, debug, verbose)
+
+  config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
+
+  # progress bar options
+  op <- if (verbose) pboptions(nout = config$nout, type = config[["type"]]) else pboptions(nout = config$nout, type = "none")
 
   flog.info("Starting tensor for estimating Z...")
 
@@ -195,7 +209,7 @@ tensor <- function(X, tca.mdl, parallel = FALSE, num_cores = NULL, log_file = "T
 #'
 #' @description TCA regression allows to test for several types of statistical relations between source-specific values and an outcome of interest. For example, in the context of tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tcareg} allows to test for cell-type-specific effects of methylation on an outcome of interest.
 #'
-#' @param X An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported.
+#' @param X An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.
 #' @param tca.mdl The value returned by applying the function \code{tca} to \code{X}.
 #' @param y An \code{n} by 1 matrix of an outcome of interest for each of the \code{n} observations in \code{X}. Note that \code{y} must include row names and column names and that NA values are currently not supported.
 #' @param C3 An \code{n} by \code{p3} design matrix of covariates that may affect \code{y}. Note that \code{C3} must include row names and column names and should not include an intercept term. NA values are currently not supported.
@@ -207,9 +221,10 @@ tensor <- function(X, tca.mdl, parallel = FALSE, num_cores = NULL, log_file = "T
 #' @param sort_results A logical value indicating whether to sort the results by their p-value (i.e. features with lower p-value will appear first in the results).
 #' @param parallel A logical value indicating whether to use parallel computing (possible when using a multi-core machine).
 #' @param num_cores A numeric value indicating the number of cores to use (activated only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.
-#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file.
+#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.
 #' @param features_metadata A path to a csv file containing metadata about the features in \code{X} that will be added to the output files (activated only if \code{save_results == TRUE}). Each row in the metadata file should correspond to one feature (with the row name being the feature identifier, as it appears in the rows of \code{X}) and each column should correspond to one metadata descriptor (with an appropriate column name). Features that do not exist in \code{X} will be ignored and features in \code{X} with missing metadata information will show missing values.
 #' @param debug A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.
+#' @param verbose A logical value indicating whether to print logs.
 #'
 #' @details TCA models \eqn{Z_{hj}^i} as the source-specific value of observation \eqn{i} in feature \eqn{j} coming from source \eqn{h} (see \link{tca} for more details). A TCA regression model tests an outcome \eqn{Y} for a linear statistical relationwith the source-specific values of a feature \eqn{j} by assuming: \deqn{Y_i = \sum_{h=1}^k \beta_{hj} Z_{hj}^i + e_i} where \eqn{e_i \sim N(0,\phi^2)}. In practice, \code{tcareg} fits this model using the conditional distribution \eqn{Y|X}, which, effectively, integrates over the latent \eqn{Z_{hj}^i} parameters. Statistical significance is then calculated using a likelihood ratio test (LRT). Note that the null and alternative models will be set automatically, except when \code{test == 'custom'}, in which case they will be set according to the user-specified null and alternative hypotheses.
 #'
@@ -246,7 +261,7 @@ tensor <- function(X, tca.mdl, parallel = FALSE, num_cores = NULL, log_file = "T
 #' p1 <- 1
 #' p2 <- 1
 #' data <- test_data(n, m, k, p1, p2, 0.01)
-#' tca.mdl <- tca(data$X, data$W, data$C1, data$C2)
+#' tca.mdl <- tca(X = data$X, W = data$W, C1 = data$C1, C2 = data$C2)
 #' y <- matrix(rexp(n, rate=.1), ncol=1)
 #' # joint test:
 #' res1 <- tcareg(data$X, tca.mdl, y, test = "joint", save_results = FALSE)
@@ -261,15 +276,16 @@ tensor <- function(X, tca.mdl, parallel = FALSE, num_cores = NULL, log_file = "T
 #'
 #' @export tcareg
 #'
-tcareg <- function(X, tca.mdl, y, C3 = NULL, test = "marginal", null_model = NULL, alternative_model = NULL, save_results = TRUE, output = "TCA", sort_results = TRUE, parallel = FALSE, num_cores = NULL, log_file = "TCA.log", features_metadata = NULL, debug = FALSE){
+tcareg <- function(X, tca.mdl, y, C3 = NULL, test = "marginal", null_model = NULL, alternative_model = NULL, save_results = TRUE, output = "TCA", sort_results = TRUE, parallel = FALSE, num_cores = NULL, log_file = "TCA.log", features_metadata = NULL, debug = FALSE, verbose = TRUE){
 
-  start_logger(log_file, debug)
+  start_logger(log_file, debug, verbose)
 
   flog.info("Starting tcareg...")
 
-  # set options for the progress bars
   config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
-  op <- pboptions(nout = config$nout, type = config[["type"]])
+
+  # set options for the progress bars
+  op <- if (verbose) pboptions(nout = config$nout, type = config[["type"]]) else pboptions(nout = config$nout, type = "none")
 
   X <- if (is.matrix(X)) X else as.matrix(X)
   y <- if (is.matrix(y)) y else as.matrix(y)
@@ -312,7 +328,7 @@ tcareg <- function(X, tca.mdl, y, C3 = NULL, test = "marginal", null_model = NUL
 #'
 #' @description Performs unsupervised feature selection followed by principal component analysis (PCA) under a row-sparse model using the ReFACTor algorithm. For example, in the context of tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{refactor} allows to capture the variation in cell-type composition, which was shown to be a dominant sparse signal in methylation data.
 #'
-#' @param X An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported.
+#' @param X An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.
 #' @param k A numeric value indicating the dimension of the signal in the data (i.e. the number of sources).
 #' @param sparsity A numeric value indicating the sparsity of the signal in the data (the number of signal rows).
 #' @param C An \code{n} by \code{p} design matrix of covariates that will be accounted for in the feature selection step. Note that \code{C} must include row names and column names and that NA values are currently not supported; ; set \code{C} to be \code{NULL} if there are no such covariates.
@@ -320,8 +336,9 @@ tcareg <- function(X, tca.mdl, y, C3 = NULL, test = "marginal", null_model = NUL
 #' @param sd_threshold A numeric value indicating a standard deviation threshold to be used for excluding low-variance features in \code{X} (i.e. features with standard deviation lower than \code{sd_threshold} will be excluded). Set \code{sd_threshold} to be \code{NULL} for turning off this filter. Note that removing features with very low variability tends to improve speed and performance.
 #' @param num_comp A numeric value indicating the number of ReFACTor components to return.
 #' @param rand_svd A logical value indicating whether to use random svd for estimating the low-rank structure of the data in the first step of the algorithm; random svd can result in a substantial speedup for large data.
-#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file.
+#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.
 #' @param debug A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.
+#' @param verbose A logical value indicating whether to print logs.
 #'
 #' @importFrom rsvd rpca
 #' @importFrom gmodels fast.prcomp
@@ -345,64 +362,10 @@ tcareg <- function(X, tca.mdl, y, C3 = NULL, test = "marginal", null_model = NUL
 #' @references Rahmani E, Zaitlen N, Baran Y, Eng C, Hu D, Galanter J, Oh S, Burchard EG, Eskin E, Zou J, Halperin E. Correcting for cell-type heterogeneity in DNA methylation: a comprehensive evaluation. Nature Methods 2017.
 #'
 #' @export refactor
-refactor <- function(X, k, sparsity = 500, C = NULL, C.remove = FALSE, sd_threshold = 0.02, num_comp = NULL, rand_svd = FALSE, log_file = "TCA.log", debug = FALSE){
+refactor <- function(X, k, sparsity = 500, C = NULL, C.remove = FALSE, sd_threshold = 0.02, num_comp = NULL, rand_svd = FALSE, log_file = "TCA.log", debug = FALSE, verbose = TRUE){
 
-  start_logger(log_file, debug)
+  return (refactor.run(X = X, k = k, sparsity = sparsity, C = C, C.remove = C.remove, sd_threshold = sd_threshold, num_comp = num_comp, rand_svd = rand_svd, log_file = log_file, debug = debug, logger_on = TRUE, verbose))
 
-  flog.info("Starting refactor...")
-
-  config <- config::get(file = system.file("extdata", "config.yml", package = "TCA"), use_parent = FALSE)
-
-  X <- if (is.matrix(X)) X else as.matrix(X)
-  C <- if (is.matrix(C) | is.null(C)) C else as.matrix(C)
-
-  if (!is.null(sd_threshold)){
-    flog.debug("Excluding features with low variance (sd_threshold < %s)...", sd_threshold)
-    sds <- apply(t(X), 2, sd)
-    m <- length(sds)
-    include <- which(sds >= sd_threshold)
-    X <- X[include,]
-    flog.debug("%s features were excluded due to low variance", m-length(include))
-  }
-
-  num_comp <- if(is.null(num_comp)) k else num_comp
-  sparsity <- if(sparsity > nrow(X)) nrow(X) else sparsity
-
-  X_adj <- X
-  if (!is.null(C)){
-    flog.info("Adjusting the data for covariates...")
-    X_adj <- X - tcrossprod(tcrossprod(X,tcrossprod(matrix.inverse(crossprod(C,C)),C)),C)
-  }
-
-  flog.info("Running PCA on X using rand_svd == %s...", rand_svd)
-  pcs <- if (rand_svd) rpca(t(X_adj), scale = TRUE, k=num_comp) else fast.prcomp(scale(t(X_adj)))
-  coeff <- pcs$rotation
-  score <- pcs$x
-
-  flog.info("Computing a low rank approximation of X...")
-  X_hat <- score[,1:k]%*%t(coeff[,1:k])
-  An <- scale(t(X_adj),center=T,scale=F)
-  Bn <- scale(X_hat,center=T,scale=F)
-  An <- t(t(An)*(1/sqrt(apply(An^2,2,sum))))
-  Bn <- t(t(Bn)*(1/sqrt(apply(Bn^2,2,sum))))
-
-  flog.info("Calculating the distance of each feature from its low rank approximation...")
-  distances <- apply((An-Bn)^2,2,sum)^0.5
-  dsort <- sort(distances,index.return=T)
-  ranked_list <- rownames(X)[dsort$ix]
-
-  flog.info("Computing the ReFACTor components based on the top %s features with lowest distances...", sparsity)
-  features <- ranked_list[1:sparsity]
-
-  if (C.remove){
-    refactor_pcs <- fast.prcomp(scale(t(X_adj[features,])))
-  }else{
-    refactor_pcs <- fast.prcomp(scale(t(X[features,])))
-  }
-
-  flog.info("Finished refactor.")
-
-  return( list("scores" = refactor_pcs$x[,1:num_comp], "coeffs" = refactor_pcs$rotation[,1:num_comp], "ranked_list" = ranked_list) )
 }
 
 
@@ -417,7 +380,8 @@ refactor <- function(X, k, sparsity = 500, C = NULL, C.remove = FALSE, sd_thresh
 #' @param p1 The number of covariates that affect the source-specific values to simulate.
 #' @param p2 The number of covariates that affect the mixture values to simulate.
 #' @param tau The variance of the i.i.d. component of variation to add on top of the simulated mixture values.
-#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file.
+#' @param log_file A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.
+#' @param verbose A logical value indicating whether to print logs.
 #'
 #' @importFrom futile.logger flog.info
 #' @importFrom pracma Reshape
@@ -440,9 +404,9 @@ refactor <- function(X, k, sparsity = 500, C = NULL, C.remove = FALSE, sd_thresh
 #'
 #' @export test_data
 #'
-test_data <- function(n, m, k, p1, p2, tau, log_file = "TCA.log"){
+test_data <- function(n, m, k, p1, p2, tau, log_file = "TCA.log", verbose = TRUE){
 
-  start_logger(log_file, FALSE)
+  start_logger(log_file, FALSE, verbose)
 
   flog.info("Starting test_data...")
 

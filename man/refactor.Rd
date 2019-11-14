@@ -6,10 +6,10 @@
 \usage{
 refactor(X, k, sparsity = 500, C = NULL, C.remove = FALSE,
   sd_threshold = 0.02, num_comp = NULL, rand_svd = FALSE,
-  log_file = "TCA.log", debug = FALSE)
+  log_file = "TCA.log", debug = FALSE, verbose = TRUE)
 }
 \arguments{
-\item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported.}
+\item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.}
 
 \item{k}{A numeric value indicating the dimension of the signal in the data (i.e. the number of sources).}
 
@@ -25,9 +25,11 @@ refactor(X, k, sparsity = 500, C = NULL, C.remove = FALSE,
 
 \item{rand_svd}{A logical value indicating whether to use random svd for estimating the low-rank structure of the data in the first step of the algorithm; random svd can result in a substantial speedup for large data.}
 
-\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file.}
+\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.}
 
 \item{debug}{A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.}
+
+\item{verbose}{A logical value indicating whether to print logs.}
 }
 \value{
 A list with the estimated components of the ReFACTor model.

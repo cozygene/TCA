@@ -2,7 +2,6 @@
 title: "Cell-type-specific resolution epigenetics using Tensor Composition Analysis in R"
 author: "Elior Rahmani"
 date: "`r Sys.Date()`"
-#output: pdf_document
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Cell-type-specific resolution epigenetics using TCA}
@@ -16,6 +15,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+
 
 In the context of DNA methylation data, Tensor Composition Analysis (TCA) can extract cell-type-specific resolution (individuals by methylation sites by cell types) from tissue-level bulk methylation data (individuals by methylation sites)<sup>[1](#myfootnote1)</sup>. Particularly, TCA can be used for conducting powerful association studies with cell-type-specific resolution and it allows to estimate the cell-type-specific methylation levels of each individual (therefore, it conceptually emulates the scenario in which each individual in the bulk data has been profiled with a single-cell resolution and then signals were aggregated in each cell population of the individual separately).
 
@@ -69,7 +69,7 @@ The Houseman et al. algorithm requires methylation reference for the studied tis
 ## Step 2: Subsetting the data
 
 In order to speed up the runtime of the following steps in this tutorial, we will extract and analyze only a small subset of the methylation sites in the data.
-Specifically, we will consider only the 500 sites listed in the file named 'GSE42861_processed.subset.cpg_identifiers.txt' - 499 of these sites were arbitrarily selected, and one more site was included by design (cg11767757). The latter was verified in the TCA paper to demonstrate a CD4-specific association with RA using sorted CD4 cells and will be used for validating our analysis.
+Specifically, we will consider only the 500 sites listed in the file named 'GSE42861_processed.subset.cpg_identifiers.txt' - 499 of these sites were arbitrarily selected, and one more site was included by design (cg07839457). The latter was verified in the TCA paper to demonstrate a CD4-specific association with RA using sorted CD4 cells and will be used for validating our analysis.
 
 In the terminal / command line run glint for subsetting the full data as follows:
 ```
@@ -83,7 +83,8 @@ Note that glint will also output two additional files ('GSE42861_processed.subse
 At this point we have obtained estimates of the cell-type proportions ('GSE42861_processed.houseman_estimates.txt') and a subset of the original data file ('GSE42861_processed.subset.txt'). We next fit the TCA model to the subset of the data. Fitting the TCA model essentially means learning the parameters of the TCA model, which will then allow us to both perform association testing (using the function 'tcareg') and estimate cell-type-specific methylation levels (using the function 'tensor').
 
 We start by loading into R the TCA package, the data matrix (X), and the cell-type proportion estimates (W):
-```{r eval=FALSE}
+
+```r
 library(TCA)
 library("data.table")
 X <- data.frame(fread(file = "GSE42861_processed.subset.txt"), row.names=1)
@@ -97,7 +98,8 @@ TCA allows to account for covariates that may affect methylation biologically at
 <!--In our case, we will set the covaraites in the file named 'GSE42861_processed.covariates.txt' (age, sex, and smoking status) as the 'C1' covariates, and we will set the covariates in 'GSE42861_processed.control_probes_pcs.txt' (10 components that reflect technical variation) as the 'C2' covariates:
 -->
 In our case, we will use age, sex, and smoking status as the C1 covariates, and batch information and 10 components that capture technical variation in the data as the C2 covariates:
-```{r eval=FALSE}
+
+```r
 covars <- data.frame(
   fread(file = "GSE42861_processed.covariates.txt"), row.names=1)
 tech_var <- data.frame(
@@ -108,7 +110,8 @@ C2 <- cbind(covars[,1],tech_var[,1:10])	# batch information and technical variat
 ```
 
 Now, we can finally fit the TCA model by running the 'tca' function. We will do so by indicating that we wish 'tca' to use multiple cores (by setting parallel = TRUE; effective only when using a multi-core machine):
-```{r eval=FALSE}
+
+```r
 tca.mdl <- tca(X = X, W = W, C1 = C1, C2 = C2,
                parallel = TRUE, log_file = "GSE42861.tca.log")
 ```
@@ -129,14 +132,16 @@ Note, however, that 'tca' requires in this case methylation sites that capture t
 TCA allows us to model a phenotype of interest as statistically related to a given methylation site through cell-type-specific effects. Under this framework, as described below, we can statistically test different hypotheses about the cell-type-specific effects. We refer to this framework as TCA regression (the 'tcareg' function).
 
 We start by loading the rheumatoid arthritis (RA) phenotype.
-```{r eval = FALSE}
+
+```r
 y <- as.matrix(covars[,5])
 ```
 
 Much like in a standard regression analysis, TCA regression allows us to account for covariates (the argument C3 in the 'tcareg' function). Notably, we have already taken into account covariates when fitting the TCA model (C1 and C2). However, these were used for modeling the variation in methylation levels. The covariates in C3, on the other hand, can be used to account for factors that may potentially be correlated with the variation of the phenotype.
 
 In our case, we include in C3 the variables age, sex, and smoking, as those are known to be correlated with RA status:
-```{r eval = FALSE}
+
+```r
 C3 <- covars[,2:4]  # age, sex, and smoking status
 ```
 In addition, since RA is known to be correlated with leukocyte composition in blood, we should consider the cell-type composition in C3. In principle, we can simply do this by including in C3 the cell-type proportions (W). However, here we will use the ReFACTor reference-free algorithm<sup>[7](#myfootnote7)</sup> instead, as it was recently shown that in the context of methylation association studies it provides better correction for cell-type composition (i.e. better control for false positives) compared with reference-based estimates<sup>[8](#myfootnote8)</sup>.
@@ -144,7 +149,8 @@ In addition, since RA is known to be correlated with leukocyte composition in bl
 ReFACTor provides a set of principal components that we can include in C3. Importantly, these components are expected to capture the variation in cell-type composition through linear combinations of the cell-type proportions. As a result, while these components can be used for correction (which is invariant to linear combinations), they cannot be used as absolute estimates of the cell-type proportions and therefore should not be given as an input to the function 'tca' (i.e. as the argument W). A more in-depth evaluation and discussion about the output of reference-free and reference-based algorithms is available elsewhere<sup>[5](#myfootnote5)</sup>.
 
 We will use the 'refactor' function for calculating the ReFACTor components. This will require us to use the full data matrix (219,096 methylation sites by 568 individuals). If you wish to skip this step for convenience, you can simply download the results of 'refactor', which can be found in the file named 'GSE42861_processed.refactor_components.txt' under the directory 'refactor_output' together with the rest of the [data files](https://www.dropbox.com/sh/xtlukhjzdhfhesc/AADBFX7atNPlf3hIIliZjo8ka?dl=0).
-```{r eval = FALSE}
+
+```r
 # if you wish to skip this step, simply load the pre-computed ReFACTor components
 ref.scores <- data.frame(
   fread(file = "GSE42861_processed.refactor_components.txt"), row.names=1)
@@ -163,8 +169,9 @@ ref.scores <- ref$scores
 For a full description of the arguments and the returned values of the 'refactor' function, including additional arguments and options, please refer to the package manual.
 
 Given the ReFACTor components, we can now construct the final C3, in which we also include the first 6 ReFACTor components<sup>[8](#myfootnote8)</sup>:
-```{r eval = FALSE}
-C3 <- cbind(C3,ref$scores)
+
+```r
+C3 <- cbind(C3,ref.scores)
 ```
 
 Now that we have the covariates we wish to consider in the TCA regression, we should chose a test to perform. The function 'tcareg' allows us to test several different types of hypotheses (tuned by the argument 'test'):
@@ -178,7 +185,8 @@ Now that we have the covariates we wish to consider in the TCA regression, we sh
 In our case, we wish to test the methylation sites in the data for associations with CD4 cells. In other words, we wish to perform marginal tests for associations with CD4. Since setting "test = 'marginal'" will perform a marginal association test for each of the cell types, we can instead set "test = 'custom'" and define a marginal association test for CD4 by setting 'alternative_model' to be CD4 cells and setting 'null_model' to be 'NULL'. This formulation requires from 'tcareg' that for each methylation site only a single effect for CD4 will be estimated and tested, while assuming no effects in the rest of the cell types - this is exactly a marginal test.
 
 We can now finally test for CD4-specific associations. In order to have a more informative view of the results, we indicate using the optional argument 'features_metadata' that 'tcareg' should include metadata about the methylation sites. Specifically, we will use the metadata file named 'HumanMethylationSites.txt', which is based on the Illumina manifest files and can be found [here](https://github.com/cozygene/TCA/tree/master/assets), and includes information such as chromosome numbers and positions for all the methylation sites in the Illumina human methylation platforms (27K, 450K and 850K/EPIC arrays).
-```{r eval = FALSE}
+
+```r
 cd4 <- colnames(W)[1] # the first column in W corresponds to CD4
 res <- tcareg(X = X, tca.mdl = tca.mdl, y = y, C3 = C3,
               test = "custom", null_model = NULL, alternative_model = c(cd4),
@@ -189,7 +197,8 @@ res <- tcareg(X = X, tca.mdl = tca.mdl, y = y, C3 = C3,
 The 'tcareg' results will be saved into the list 'res'. In addition, since we indicated 'save_results = TRUE', the results will be saved into a file named "GSE42861.tcareg.CD4.custom.txt" (note that the file name is indicated by the argument 'output'). For a full list of the values returned by 'tcareg' and for additional arguments please refer to the package manual.
 
 We can now look at the association results - we start by plotting a quantile-quantile (qq) plot of the p-values:
-```{r eval = FALSE}
+
+```r
 plot(-log10(seq(from = 1/500, to = 1, by = 1/500)), -log10(sort(res$pvals)),
      xlab = "Expected -log(p-val)", ylab = "Observed -log(p-val)")
 abline(a=0, b=1); abline(h=-log10(0.05/500), col="red")
@@ -198,11 +207,12 @@ This will output the following plot, which shows a single significant hit:
 
 ![Results of the CD4 marginl test presented by a qq-plot of the -log10(pvalues).](figs/fig1.png) 
 
-Ranking the p-values shows that the association found is with the methylation site cg11767757.
-```{r eval = FALSE}
-hit.position <- order(res$pvals)[1] # 498
-hit <- rownames(X)[hit.position] # cg11767757
-hit.pval <- res$pvals[hit.position] # 7.95e-08
+Ranking the p-values shows that the association found is with the methylation site cg07839457.
+
+```r
+hit.position <- order(res$pvals)[1] # 353
+hit <- rownames(X)[hit.position] # cg07839457
+hit.pval <- res$pvals[hit.position]
 ```
 
 #### Notes
@@ -212,27 +222,29 @@ hit.pval <- res$pvals[hit.position] # 7.95e-08
 
 ## Step 5: Estimating cell-type-specific methylation
 
-Finally, we will apply the function 'tensor' for estimating the cell-type-specific methylation levels of the associated site we found in the previous step. 'tensor' requires as an input the parameters of the fitted TCA model for the sites for which we wish to get cell-type-specific estimates. Since we are interested in estimates for just one particular site, we will first use the function 'tcasub' for subsetting the estimated model parameters to include only information about the associated site.
-```{r eval = FALSE}
+Finally, we will apply the function 'tensor' for estimating the cell-type-specific methylation levels of the associated site we found in the previous step. Note that this step is not necessary given that we already detected the association, however, we will use it for visualization purposes. 'tensor' requires as an input the parameters of the fitted TCA model for the sites for which we wish to get cell-type-specific estimates. Since we are interested in estimates for just one particular site, we will first use the function 'tcasub' for subsetting the estimated model parameters to include only information about the associated site.
+
+```r
 # subset the estimates of the model parameters
 mdl.tca.sub <- tcasub(tca.mdl, features = c(hit), log_file = "GSE42861.tcasub.log")
 
 # estimate cell-type-specific methylation for the associated site
 Z_hat <- tensor(X = X[hit,], tca.mdl.sub, log_file = "GSE42861.tensor.log")
 ```
-This results in a list 'Z_hat' in which each element includes the estimated cell-type-specific methylation levels for one specific cell type (where the order of cell types is the same as the order of the cell types in W). This allows us, for example, to compare between RA cases and controls based on their estimated CD4-specific methylation levels in cg11767757:
-```{r eval = FALSE}
+This results in a list 'Z_hat' in which each element includes the estimated cell-type-specific methylation levels for one specific cell type (where the order of cell types is the same as the order of the cell types in W). This allows us, for example, to compare between RA cases and controls based on their estimated CD4-specific methylation levels in cg07839457:
+
+```r
 cd4 <- Z_hat[[1]] # the first column in W is CD4, therefore take the first element in Z_hat
 hit.cd4 <- cd4[1,]
 d <- data.frame(hit.cd4, y)
-boxplot(hit.cd4~y, data = d, main="CD4 methylation in cg11767757",
+boxplot(hit.cd4~y, data = d, main="CD4 methylation in cg07839457",
         names=c("controls","cases"), ylab="Estimated methylation")
 ```
 
 This results in the following boxplots:
 
 
-![The distribution of the estimated CD4-specific cg11767757 methylation levels in RA cases and controls presented by boxplots.](figs/fig2.png) 
+![The distribution of the estimated CD4-specific cg07839457 methylation levels in RA cases and controls presented by boxplots.](figs/fig2.png) 
  
  
 #### Notes
@@ -240,7 +252,7 @@ This results in the following boxplots:
 
 ___
 
-<a name="myfootnote1">1</a>: Rahmani et al. "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology." Nature Communications, in press (2019).
+<a name="myfootnote1">1</a>: Rahmani et al. "Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology." Nature Communications 2019.
 
 <a name="myfootnote2">2</a>: Liu et al. "Epigenome-wide association data implicate DNA methylation as an intermediary of genetic risk in rheumatoid arthritis." Nature biotechnology. 2013 Feb;31(2):142.
 

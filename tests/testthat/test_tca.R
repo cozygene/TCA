@@ -34,7 +34,7 @@ test_that("Comparison with the results given by the matlab version", {
   matlab.W_hat <- as.matrix(read.table(paste(basedir,"W_hat.txt",sep=""), header = FALSE, sep=","))
 
   # run tca
-  res <- tca(t(X), W, C1 = C1, C2 = C2, refit_W = TRUE, refit_W.sparsity = ncol(X), parallel = FALSE, log_file = NULL)
+  res <- tca(X = t(X), W = W, C1 = C1, C2 = C2, refit_W = TRUE, refit_W.sparsity = ncol(X), parallel = FALSE, log_file = NULL)
 
   # compare parameter estimates
   for (h in 1:ncol(res$mus_hat)){
@@ -53,7 +53,7 @@ test_that("Comparison with the results given by the matlab version", {
 
   # use noisy initial estimates of W
   W_noisy <- as.matrix(read.table(paste(basedir,"W_noisy.txt",sep=""), header = FALSE, sep=","))
-  res2 <- tca(t(X), W_noisy, C1 = C1, C2 = C2, refit_W = TRUE, refit_W.sparsity = ncol(X), parallel = FALSE, log_file = NULL)
+  res2 <- tca(X = t(X), W = W_noisy, C1 = C1, C2 = C2, refit_W = TRUE, refit_W.sparsity = ncol(X), parallel = FALSE, log_file = NULL)
   matlab.W_noisy_hat <- as.matrix(read.table(paste(basedir,"W_noisy_hat.txt",sep=""), header = FALSE, sep=","))
   for (h in 1:ncol(res2$W)){
     expect_equal(cor(res2$W[,h],matlab.W_noisy_hat[,h]) > 0.99, TRUE)
@@ -149,7 +149,7 @@ test_that("Evaluate tcareg with the results of the matlab version", {
   m <- ncol(X)
   k <- ncol(W)
 
-  tca.mdl <- tca(t(X), W, refit_W = FALSE, parallel = FALSE, log_file = NULL)
+  tca.mdl <- tca(X = t(X), W = W, refit_W = FALSE, parallel = FALSE, log_file = NULL)
 
   # (1) joint test
   # power
