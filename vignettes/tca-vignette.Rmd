@@ -205,7 +205,7 @@ abline(a=0, b=1); abline(h=-log10(0.05/500), col="red")
 ```
 This will output the following plot, which shows a single significant hit:
 
-![Results of the CD4 marginl test presented by a qq-plot of the -log10(pvalues).](figs/fig1.png) 
+![Results of the CD4 marginal test presented by a qq-plot of the -log10(pvalues).](figs/fig1.png) 
 
 Ranking the p-values shows that the association found is with the methylation site cg07839457.
 
