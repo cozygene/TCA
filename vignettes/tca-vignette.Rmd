@@ -226,7 +226,7 @@ Finally, we will apply the function 'tensor' for estimating the cell-type-specif
 
 ```r
 # subset the estimates of the model parameters
-mdl.tca.sub <- tcasub(tca.mdl, features = c(hit), log_file = "GSE42861.tcasub.log")
+tca.mdl.sub <- tcasub(tca.mdl, features = c(hit), log_file = "GSE42861.tcasub.log")
 
 # estimate cell-type-specific methylation for the associated site
 Z_hat <- tensor(X = X[hit,], tca.mdl.sub, log_file = "GSE42861.tensor.log")
