@@ -178,7 +178,7 @@ plot_qq(list(tca.mdl.hannum.pvals.joint, tca.mdl.hannum.pvals.marg_cond[,"CD4T.a
 
 This results in the following figure:
 
-![**Association results for chromosome 22 in the Hannum data. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for CpG-level associations under a joint test (left) and for the associations with CD4 cells under a marginal conditional test (right). The dashed red horizontal line represents experiment-wide significance, and significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp1.fig1.png) 
+![**Association results for chromosome 22 in the Hannum data. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for CpG-level associations under a joint test (left) and for the associations with CD4 cells under a marginal conditional test (right). The dashed red horizontal line represents experiment-wide significance, and significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp1.fig1.PNG) 
 
 These results show that the marginal conditional test for differential methylation in CD4 cells yield no experiment-wide significant associations. In contrast, the joint test, which tests for CpG-level differential methylation, presents strong signals. While we do not know at this point which cell types are driving those signals, we will soon see that some of the signals can be attributed to CD4 cells.
 
@@ -224,7 +224,7 @@ plot_qq(list(tca.mdl.hannum.2.pvals.joint, tca.mdl.hannum.2.pvals.marg_cond[,"CD
         experiment_wide_line = FALSE)
 ```
 
-![**Association results for chromosome 22 in the Hannum data, while accounting for the ReFACTor components. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for CpG-level associations under a joint test (left) and for the associations with CD4 cells under a marginal conditional test (right). The dashed red horizontal line represents expriment-wide significance, and significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp1.fig2.png)
+![**Association results for chromosome 22 in the Hannum data, while accounting for the ReFACTor components. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for CpG-level associations under a joint test (left) and for the associations with CD4 cells under a marginal conditional test (right). The dashed red horizontal line represents expriment-wide significance, and significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp1.fig2.PNG)
 
 We can see a reduction in the inflation we previously observed. Interestingly, we now also observe two experiment-wide significant hits that were not detected earlier under the marginal conditional test, providing further evidence that correction for additional cell composition variation was justified.
 
@@ -299,7 +299,7 @@ plot_scatter(dfs = dfs,
               titles = paste("CD4 methylation in ",cd4.hits,sep=""))
 ```
 
-![**Methylation levels of the four validated CD4-specific hits in the Liu data as a function of age. Results are shown in each of the four CpGs after adjusting their methylation levels for covariates. Note that the p-values indicated on the plots are for the Pearson linear correlation of age with the adjusted methylation levels; therefore, they slightly differ from the association p-values.**](exp1.fig4.png)
+![**Methylation levels of the four validated CD4-specific hits in the Liu data as a function of age. Results are shown in each of the four CpGs after adjusting their methylation levels for covariates. Note that the p-values indicated on the plots are for the Pearson linear correlation of age with the adjusted methylation levels; therefore, they slightly differ from the association p-values.**](exp1.fig4.PNG)
 
 As in any replication analysis, we should make sure that the distribution of p-values across all sites in the Liu data is well calibrated. To that end, we rerun the regression analysis with the Liu et al. data, only this time we consider all sites in the data and plot the distribution of p-values.
 While we do expect to see some inflation in the distribution of p-values for age, much like before in the Hannum data, it is good practice to evaluate the distribution of p-values data used for validation.
@@ -312,7 +312,7 @@ liu.cd4.regression.pvals <- unlist(lapply(1:nrow(liu.cd4$X),
 plot_qq(list(liu.cd4.regression.pvals), labels = "Linear regression (sorted CD4)")
 ```
 
-![**Association results for chromosome 22 in the Liu data with sorted CD4 cells. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for the associations using linear regression. The dashed red horizontal line represents expriment-wide significance, and significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp1.fig3.png)
+![**Association results for chromosome 22 in the Liu data with sorted CD4 cells. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for the associations using linear regression. The dashed red horizontal line represents expriment-wide significance, and significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp1.fig3.PNG)
 
 Qualitatively comparing the distribution of p-values to the one we observed earlier when we applied the joint test of TCA to the Hannum data, results seem to be reasonably calibrated at a similar level.
 
@@ -406,7 +406,7 @@ We can now plot the distribution of p-values:
 plot_qq(list(tcareg.mdl.paquette.joint$pvals), labels = "Joint test with infant arousal")
 ```
 
-![**Association results with infant arousal in chromosome 22 of the Paquette cord-blood data. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for CpG-level associations under a joint test. The dashed red horizontal line represents expriment-wide significance, and significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp2.fig1.png)
+![**Association results with infant arousal in chromosome 22 of the Paquette cord-blood data. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for CpG-level associations under a joint test. The dashed red horizontal line represents expriment-wide significance, and significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp2.fig1.PNG)
 
 Similarly to what we observed in Example 1, we get an inflated distribution. In principle, we could try to take the same approach we used in Example 1 of accounting for more of the cell-type composition variation in the data by adding ReFACTor components as covariates. However, here we take an alternative approach of re-estimating the cell-type proportions in attempt to improve them; this is expected to be particularly beneficial in cases where our input estimates of the cell-type proportions are expected to be of low quality. 
 In practice, deciding on either re-estimating the cell-type proportions or accounting for more of the cell composition variation using a reference-free approach (or using both approaches) is context dependent, and both options should be considered in analysis for their impact on the global distribution of p-values.
@@ -449,7 +449,7 @@ tcareg.mdl.paquette.joint.2 <- tcareg(X = paquette$X,
 plot_qq(list(tcareg.mdl.paquette.joint.2$pvals), labels = "Joint test with infant arousal")
 ```
 
-![**Association results with infant arousal in chromosome 22 of the Paquette cord-blood data, after re-estimating the cell-type proportions. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for CpG-level associations under a joint test. The dashed red horizontal line represents expriment-wide significance, and significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp2.fig2.png)
+![**Association results with infant arousal in chromosome 22 of the Paquette cord-blood data, after re-estimating the cell-type proportions. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for CpG-level associations under a joint test. The dashed red horizontal line represents expriment-wide significance, and significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp2.fig2.PNG)
 
 Re-estimating `W` successfully eliminated the inflation, and, in addition, revealed a single experiment-wide significant association that was not observed before (cg21771250). We next further perform a marginal conditional test on this hit and evaluate the results.
 
@@ -471,7 +471,7 @@ plot_qq(split(tcareg.mdl.paquette.2.marg_cond$pvals,
         ggarrange.ncol = 2)
 ```
 
-![**Association results with infant arousal in chromosome 22 of the Paquette cord-blood data, after re-estimating the cell-type proportions and using marginal conditional tests. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for associations with CD8 cells (top left), granulocytes (top right), monocytes (bottom left), and nucleated red blood cells (bottom right). The dashed red horizontal lines represent expriment-wide significance under adjustment for one cell type (thick line) and for all cell types (thin line). Significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp2.fig3.png)
+![**Association results with infant arousal in chromosome 22 of the Paquette cord-blood data, after re-estimating the cell-type proportions and using marginal conditional tests. Results are presented by quantile-quantile plots of the (negative-log transformed) p-values for associations with CD8 cells (top left), granulocytes (top right), monocytes (bottom left), and nucleated red blood cells (bottom right). The dashed red horizontal lines represent expriment-wide significance under adjustment for one cell type (thick line) and for all cell types (thin line). Significant global deviation from the y=x line indicates an inflation arising from a badly specified model.**](exp2.fig3.PNG)
 
 Since we observe no inflation, we can proceed and extract a p-value for each cell type in the CpG-level association we found.
 
@@ -516,7 +516,7 @@ plot_scatter(dfs = list(df.bulk, df.gran),
               hit.joint,sep=""))
 ```
 
-![**Methylation levels, adjusted for covariartes, as a function of infant arousal measurement. Results are shown for cg21771250 using either the bulk level of the CpG (left) or using the estimated granulocyte-specific methylation given by TCA (right).**](exp2.fig4.png)
+![**Methylation levels, adjusted for covariartes, as a function of infant arousal measurement. Results are shown for cg21771250 using either the bulk level of the CpG (left) or using the estimated granulocyte-specific methylation given by TCA (right).**](exp2.fig4.PNG)
 
 As we can see from these plots, the benefit of TCA over the standard regression analysis is twofold; first, it allows the detection of a CpG-level association, which would have not been detected by a standard regression analysis (considering the low correlation between the bulk levels and the phenotype and the stringent experiment-wide significance threshold), and second, it provides insights into the differentially methylated cell types.
 
