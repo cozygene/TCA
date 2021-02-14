@@ -36,7 +36,7 @@ init_cluster <- function(num_cores = NULL){
   flog.debug("Initiate cluster...")
   cl <- makeCluster(get_num_cores(num_cores))
   flog.debug("Parallel is on with %s nodes.",get_num_cores(num_cores))
-  invisible(clusterEvalQ(cl, c(library("pracma"), library("matrixcalc"), library("nloptr"), library("glmnet") )))
+  invisible(clusterEvalQ(cl, c(library("pracma"), library("matrixcalc"), library("nloptr") )))
   flog.debug("Packages were loaded into the cluster nodes.")
   return(cl)
 }
