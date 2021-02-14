@@ -19,7 +19,7 @@ test_data(n, m, k, p1, p2, tau, log_file = "TCA.log", verbose = TRUE)
 
 \item{tau}{The variance of the i.i.d. component of variation to add on top of the simulated mixture values.}
 
-\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.}
+\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == FALSE} then no output file will be generated regardless of the value of \code{log_file}.}
 
 \item{verbose}{A logical value indicating whether to print logs.}
 }
@@ -32,8 +32,8 @@ A list with the simulated data and parameters.
 \item{sigmas}{An \code{m} by \code{k} matrix of the standard variation of each of the \code{m} features for each of the \code{k} sources.}
 \item{C1}{ An \code{n} by \code{p1} design matrix of simulated covariates that affect the hidden source-specific values.}
 \item{C2}{ An \code{n} by \code{p2} design matrix of simulated covariates that affect the mixture.}
-\item{gammas}{An \code{m} by \code{k*p1} matrix of the effects of the \code{p1} factors in \code{C1} on each of the \code{m} features in \code{X}, where the first \code{p1} columns are the source-specific effects of the \code{p1} factors on the first source, the following \code{p1} columns are the source-specific effects on the second source and so on.}
-\item{deltas}{An \code{m} by \code{p2} matrix of the effects of the \code{p2} factors in \code{C2} on the mixture values of each of the \code{m} features in \code{X}.}
+\item{gammas}{An \code{m} by \code{k*p1} matrix of the effects of the \code{p1} covariates in \code{C1} on each of the \code{m} features in \code{X}, where the first \code{p1} columns are the source-specific effects of the \code{p1} covariates on the first source, the following \code{p1} columns are the source-specific effects on the second source and so on.}
+\item{deltas}{An \code{m} by \code{p2} matrix of the effects of the \code{p2} covariates in \code{C2} on the mixture values of each of the \code{m} features in \code{X}.}
 }
 \description{
 Generates simple test data following the TCA model.

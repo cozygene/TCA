@@ -4,20 +4,30 @@
 \alias{refactor}
 \title{Sparse principal component analysis using ReFACTor}
 \usage{
-refactor(X, k, sparsity = 500, C = NULL, C.remove = FALSE,
-  sd_threshold = 0.02, num_comp = NULL, rand_svd = FALSE,
-  log_file = "TCA.log", debug = FALSE, verbose = TRUE)
+refactor(
+  X,
+  k,
+  sparsity = 500,
+  C = NULL,
+  C.remove = FALSE,
+  sd_threshold = 0.02,
+  num_comp = NULL,
+  rand_svd = FALSE,
+  log_file = "TCA.log",
+  debug = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
-\item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.}
+\item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.}
 
-\item{k}{A numeric value indicating the dimension of the signal in the data (i.e. the number of sources).}
+\item{k}{A numeric value indicating the dimension of the signal in \code{X} (i.e. the number of sources).}
 
-\item{sparsity}{A numeric value indicating the sparsity of the signal in the data (the number of signal rows).}
+\item{sparsity}{A numeric value indicating the sparsity of the signal in \code{X} (the number of signal rows).}
 
-\item{C}{An \code{n} by \code{p} design matrix of covariates that will be accounted for in the feature selection step. Note that \code{C} must include row names and column names and that NA values are currently not supported; ; set \code{C} to be \code{NULL} if there are no such covariates.}
+\item{C}{An \code{n} by \code{p} design matrix of covariates that will be accounted for in the feature selection step. An intercept term will be included automatically. Note that \code{C} must include row names and column names and that NA values are currently not supported; set \code{C} to be \code{NULL} if there are no such covariates.}
 
-\item{C.remove}{A logical value indicating whether the covariates in X should be accounted for not only in the feature selection step, but also in the final calculation of the principal components (i.e. if \code{C.remove == TRUE} then the selected features will be adjusted for the covariates in \code{C} prior to calculating principal components). Note that setting \code{C.remove} to be \code{TRUE} is desired when ReFACTor is intended to be used for correction in downstream analysis, whereas setting \code{C.remove} to be \code{FALSE} is desired when ReFACTor is merely used for capturing the sparse signals in the data (i.e. regardless of correction).}
+\item{C.remove}{A logical value indicating whether the covariates in X should be accounted for not only in the feature selection step, but also in the final calculation of the principal components (i.e. if \code{C.remove == TRUE} then the selected features will be adjusted for the covariates in \code{C} prior to calculating principal components). Note that setting \code{C.remove} to be \code{TRUE} is desired when ReFACTor is intended to be used for correction in downstream analysis, whereas setting \code{C.remove} to be \code{FALSE} is desired when ReFACTor is merely used for capturing the sparse signals in \code{X} (i.e. regardless of correction).}
 
 \item{sd_threshold}{A numeric value indicating a standard deviation threshold to be used for excluding low-variance features in \code{X} (i.e. features with standard deviation lower than \code{sd_threshold} will be excluded). Set \code{sd_threshold} to be \code{NULL} for turning off this filter. Note that removing features with very low variability tends to improve speed and performance.}
 
@@ -25,9 +35,9 @@ refactor(X, k, sparsity = 500, C = NULL, C.remove = FALSE,
 
 \item{rand_svd}{A logical value indicating whether to use random svd for estimating the low-rank structure of the data in the first step of the algorithm; random svd can result in a substantial speedup for large data.}
 
-\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.}
+\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == FALSE} then no output file will be generated regardless of the value of \code{log_file}.}
 
-\item{debug}{A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.}
+\item{debug}{A logical value indicating whether to set the logger to a more detailed debug level; set \code{debug} to \code{TRUE} before reporting issues.}
 
 \item{verbose}{A logical value indicating whether to print logs.}
 }
@@ -35,7 +45,7 @@ refactor(X, k, sparsity = 500, C = NULL, C.remove = FALSE,
 A list with the estimated components of the ReFACTor model.
 \item{scores}{An \code{n} by \code{num_comp} matrix of the ReFACTor components (the projection scores).}
 \item{coeffs}{A \code{sparsity} by \code{num_comp} matrix of the coefficients of the ReFACTor components (the projection loadings).}
-\item{ranked_list}{A vector with the features in the data, ranked by their scores in the feature selection step of the algorithm; the top scoring features (set according to the argument \code{sparsity}) are used for calculating the ReFACTor components. Note that features that were excluded according to \code{sd_threshold} will not appear in this \code{ranked_list}.}
+\item{ranked_list}{A vector with the features in \code{X}, ranked by their scores in the feature selection step of the algorithm; the top scoring features (set according to the argument \code{sparsity}) are used for calculating the ReFACTor components. Note that features that were excluded according to \code{sd_threshold} will not appear in this \code{ranked_list}.}
 }
 \description{
 Performs unsupervised feature selection followed by principal component analysis (PCA) under a row-sparse model using the ReFACTor algorithm. For example, in the context of tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{refactor} allows to capture the variation in cell-type composition, which was shown to be a dominant sparse signal in methylation data.

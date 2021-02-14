@@ -4,16 +4,30 @@
 \alias{tcareg}
 \title{Fitting a TCA regression model}
 \usage{
-tcareg(X, tca.mdl, y, C3 = NULL, test = "marginal",
-  null_model = NULL, alternative_model = NULL, save_results = TRUE,
-  output = "TCA", sort_results = TRUE, parallel = FALSE,
-  num_cores = NULL, log_file = "TCA.log", features_metadata = NULL,
-  debug = FALSE, verbose = TRUE)
+tcareg(
+  X,
+  tca.mdl,
+  y,
+  C3 = NULL,
+  test = "marginal_conditional",
+  null_model = NULL,
+  alternative_model = NULL,
+  save_results = FALSE,
+  fast_mode = TRUE,
+  output = "TCA",
+  sort_results = FALSE,
+  parallel = FALSE,
+  num_cores = NULL,
+  log_file = "TCA.log",
+  features_metadata = NULL,
+  debug = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
-\item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.}
+\item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.}
 
-\item{tca.mdl}{The value returned by applying the function \code{tca} to \code{X}.}
+\item{tca.mdl}{The value returned by applying \link{tca} to \code{X}.}
 
 \item{y}{An \code{n} by 1 matrix of an outcome of interest for each of the \code{n} observations in \code{X}. Note that \code{y} must include row names and column names and that NA values are currently not supported.}
 
@@ -25,48 +39,53 @@ tcareg(X, tca.mdl, y, C3 = NULL, test = "marginal",
 
 \item{alternative_model}{A vector with a subset (or all) of the names of the sources in \code{tca.mdl$W} to be used as an alternative model (activated only if \code{test == 'custom'}).}
 
-\item{save_results}{A logical value indicating whether to save the returned results in a file. If \code{TRUE} and \code{test == 'marginal'} or \code{test == 'marginal_conditional'} then \code{k} files will be saved (one for the results of each source).}
+\item{save_results}{A logical value indicating whether to save the returned results in a file. If \code{test == 'marginal'} or (\code{fast_mode == TRUE} and \code{test == 'marginal_conditional'}) then \code{k} files will be saved (one for the results of each source).}
+
+\item{fast_mode}{A logical value indicating whether to use a fast version of TCA regression, in which source-specific-values are first estimated using the \code{tensor} function and then tested under a standard regression framework (see more details below).}
 
 \item{output}{Prefix for output files (activated only if \code{save_results == TRUE}).}
 
-\item{sort_results}{A logical value indicating whether to sort the results by their p-value (i.e. features with lower p-value will appear first in the results).}
+\item{sort_results}{A logical value indicating whether to sort the results by their p-value (i.e. features with lower p-value will appear first in the results). This option is not available if \code{fast_mode == TRUE} and \code{test == "marginal_conditional"}.}
 
 \item{parallel}{A logical value indicating whether to use parallel computing (possible when using a multi-core machine).}
 
 \item{num_cores}{A numeric value indicating the number of cores to use (activated only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.}
 
-\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.}
+\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == FALSE} then no output file will be generated regardless of the value of \code{log_file}.}
 
-\item{features_metadata}{A path to a csv file containing metadata about the features in \code{X} that will be added to the output files (activated only if \code{save_results == TRUE}). Each row in the metadata file should correspond to one feature (with the row name being the feature identifier, as it appears in the rows of \code{X}) and each column should correspond to one metadata descriptor (with an appropriate column name). Features that do not exist in \code{X} will be ignored and features in \code{X} with missing metadata information will show missing values.}
+\item{features_metadata}{A path to a csv file containing metadata about the features in \code{X} that will be added to the output files (activated only if \code{save_results == TRUE}). Each row in the metadata file should correspond to one feature in \code{X} (with the row name being the feature identifier, as it appears in the rows of \code{X}) and each column should correspond to one metadata descriptor (with an appropriate column name). Features that do not exist in \code{X} will be ignored and features in \code{X} with missing metadata information will show missing values.}
 
-\item{debug}{A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.}
+\item{debug}{A logical value indicating whether to set the logger to a more detailed debug level; set \code{debug} to \code{TRUE} before reporting issues.}
 
 \item{verbose}{A logical value indicating whether to print logs.}
 }
 \value{
-A list with the results of applying the TCA regression model to each of the features in the data. If \code{test == 'marginal'} or \code{test == 'marginal_conditional'} then a list of \code{k} such lists of results are returned, one for the results of each source.
+A list with the results of applying the TCA regression model to each of the features in \code{X}. If \code{test == 'marginal'} or (\code{test == 'marginal_conditional'} and \code{fast_mode == FALSE}) then a list of \code{k} such lists of results are returned, one for the results of each source.
 \item{phi}{An estimate of the standard deviation of the i.i.d. component of variation in the TCA regression model.}
-\item{beta}{A matrix of effect size estimates for the source-specific effects, such that each row corresponds to the estimated effect sizes of one feature. The number of columns corresponds to the number of estimated effects (e.g., if \code{test} is set to \code{marginal} then \code{beta} will include a single column, if \code{test} is set to \code{joint} then \code{beta} will include \code{k} columns and so on).}
-\item{intercept}{An \code{m} by \code{1} matrix of estimates for the intercept of each feature.}
-\item{alpha}{An \code{m} by \code{p3} matrix of effect size estimates for the \code{p3} covariates in \code{C3}, such that each row corresponds to the estimated effect sizes of one feature.}
-\item{null_ll}{An \code{m} by \code{1} matrix of the log-likelihood of the model under the null hypothesis.}
+\item{beta}{A matrix of effect size estimates for the source-specific effects, such that each row corresponds to the estimated effect sizes of one feature in \code{X}. The number of columns corresponds to the number of estimated effects (e.g., if \code{test} is set to \code{marginal} then \code{beta} will include a single column, if \code{test} is set to \code{joint} then \code{beta} will include \code{k} columns etc.).}
+\item{intercept}{An \code{m} by \code{1} matrix of estimates for the intercept term of each feature.}
+\item{alpha}{An \code{m} by \code{p3} matrix of effect size estimates for the \code{p3} covariates in \code{C3}, such that each row corresponds to the estimated effect sizes of one feature in \code{X}.}
+\item{null_ll}{An \code{m} by \code{1} matrix of the log-likelihood of the model under the null hypothesis. Returned only if \code{fast_mode == FALSE}.}
 \item{alternative_ll}{An \code{m} by \code{1} matrix of the log-likelihood of the model under the alternative hypothesis.}
-\item{stats}{An \code{m} by \code{1} matrix of the LRT statistic for each feature in the data.}
-\item{df}{The degrees of freedom for deriving p-values using LRT.}
-\item{pvals}{An \code{m} by \code{1} matrix of the p-value for each feature in the data.}
-\item{qvals}{An \code{m} by \code{1} matrix of the q-value (FDR-adjusted p-values) for each feature in the data.}
+\item{stats}{An \code{m} by \code{k} matrix of T statistics for each source in each feature in \code{X} assuming \code{test == "marginal_conditional"} and \code{fast_mode == TRUE}; otherwise, an \code{m} by \code{1} matrix of an (partial) F statistic (if \code{fast_mode == TRUE}) or a likelihood-ratio test statistic (if \code{fast_mode == FALSE}) for each feature in \code{X}.}
+\item{df}{The degrees of freedom for deriving p-values.}
+\item{pvals}{An \code{m} by \code{k} matrix of p-values for each source in each feature in \code{X} assuming \code{test == "marginal_conditional"} and \code{fast_mode == TRUE}; otherwise, an \code{m} by \code{1} matrix of the p-value for each feature in \code{X}.}
+\item{qvals}{An \code{m} by \code{k} matrix of q-values (FDR-adjusted p-values) for each source in each feature in \code{X} assuming \code{test == "marginal_conditional"} and \code{fast_mode == TRUE}; otherwise, an \code{m} by \code{1} matrix of the q-value for each feature in \code{X}. Note that if \code{test == "marginal_conditional"} and \code{fast_mode == TRUE} then q-values are calculated for each source separately.}
 }
 \description{
-TCA regression allows to test for several types of statistical relations between source-specific values and an outcome of interest. For example, in the context of tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tcareg} allows to test for cell-type-specific effects of methylation on an outcome of interest.
+TCA regression allows to test, under several types of statistical tests, the effects of source-specific values on an outcome of interest (or on mediating components thereof). For example, in the context of tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tcareg} allows to test for cell-type-specific effects of methylation on outcomes of interest (or on mediating components thereof).
 }
 \details{
-TCA models \eqn{Z_{hj}^i} as the source-specific value of observation \eqn{i} in feature \eqn{j} coming from source \eqn{h} (see \link{tca} for more details). A TCA regression model tests an outcome \eqn{Y} for a linear statistical relation with the source-specific values of a feature \eqn{j} by assuming: \deqn{Y_i = \sum_{h=1}^k \beta_{hj} Z_{hj}^i + e_i} where \eqn{e_i \sim N(0,\phi^2)}. In practice, \code{tcareg} fits this model using the conditional distribution \eqn{Y|X}, which, effectively, integrates over the latent \eqn{Z_{hj}^i} parameters. Statistical significance is then calculated using a likelihood ratio test (LRT). Note that the null and alternative models will be set automatically, except when \code{test == 'custom'}, in which case they will be set according to the user-specified null and alternative hypotheses.
+TCA models \eqn{Z_{hj}^i} as the source-specific value of observation \eqn{i} in feature \eqn{j} coming from source \eqn{h} (see \link{tca} for more details). A TCA regression model tests an outcome \eqn{Y} for a linear statistical relation with the source-specific values of a feature \eqn{j} by assuming: \deqn{Y_i =  \alpha_{j,0} + \sum_{h=1}^k\beta_{hj} Z_{hj}^i + c_i^{(3)}\alpha_{j}  + e_i} where \eqn{\alpha_{j,0}} is an intercept term, \eqn{\beta_{hj}} is the effect of source \eqn{h}, \eqn{c_i^{(3)}} and \eqn{\alpha_j} correspond to the \eqn{p_3} covariate values of observation \eqn{i} (i.e. a row vector from \code{C3}) and their effect sizes, respectively, and \eqn{e_i \sim N(0,\phi^2)}. In practice, if \code{fast_mode == FALSE} then \code{tcareg} fits this model using the conditional distribution \eqn{Y|X}, which, effectively, integrates over the random \eqn{Z_{hj}^i}. Statistical significance is then calculated using a likelihood ratio test (LRT).
+Alternatively, in case \code{fast_mode == TRUE} the above model is fitted by first learning point estimates for \eqn{Z_{hj}^i} using the \link{tensor} function and then assessing statistical significance using T-tests and partial F-tests under a standard regression framework. This alternative provides a substantial boost in speed.
 
-Under the TCA regression model, several statistical tests can be performed by setting the argument \code{test} according to one of the following options.
+Note that the null and alternative models will be set automatically, except when \code{test == 'custom'}, in which case they will be set according to the user-specified null and alternative hypotheses.
+
+Under the TCA regression model, several statistical tests can be performed by setting the argument \code{test} according to one of the following options:
 
 1. If \code{test == 'marginal'}, \code{tcareg} will perform the following for each source \eqn{l}. For each feature \eqn{j}, \eqn{\beta_{lj}} will be estimated and tested for a non-zero effect, while assuming \eqn{\beta_{hj}=0} for all other sources \eqn{h\neq l}.
 
-2. If \code{test == 'marginal_conditional'}, \code{tcareg} will perform the following for each source \eqn{l}. For each feature \eqn{j}, \eqn{\beta_{lj}} will be estimated and tested for a non-zero effect, while also estimating the effect sizes \eqn{\beta_{hj}} for all other sources \eqn{h\neq l}.
+2. If \code{test == 'marginal_conditional'}, \code{tcareg} will perform the following for each source \eqn{l}. For each feature \eqn{j}, \eqn{\beta_{lj}} will be estimated and tested for a non-zero effect, while also estimating the effect sizes \eqn{\beta_{hj}} for all other sources \eqn{h\neq l} (thus accounting for covariances between the estimated effects of different sources).
 
 3. If \code{test == 'joint'}, \code{tcareg} will estimate for each feature \eqn{j} the effect sizes of all \eqn{k} sources \eqn{\beta_{1j},…,\beta_{kj}} and then test the set of \eqn{k} estimates of each feature \code{j} for a joint effect.
 
@@ -74,10 +93,6 @@ Under the TCA regression model, several statistical tests can be performed by se
 
 5. If \code{test == 'custom'}, \code{tcareg} will estimate for each feature \eqn{j} the effect sizes of a predefined set of sources (defined by a user-specified alternative model) and then test their estimates for a joint effect, while accounting for a nested predefined set of sources (defined by a user-specified null model).
 }
-\section{Note}{
- The function \code{tcareg} may require a long running time when the input matrix \code{X} is very large; to alleviate this, it is strongly advised to use the \code{parallel} argument, given that a multi-core machine is available.
-}
-
 \examples{
 n <- 50
 m <- 10
@@ -87,16 +102,19 @@ p2 <- 1
 data <- test_data(n, m, k, p1, p2, 0.01)
 tca.mdl <- tca(X = data$X, W = data$W, C1 = data$C1, C2 = data$C2)
 y <- matrix(rexp(n, rate=.1), ncol=1)
+rownames(y) <- rownames(data$W)
+# marginal conditional test:
+res0 <- tcareg(data$X, tca.mdl, y)
 # joint test:
-res1 <- tcareg(data$X, tca.mdl, y, test = "joint", save_results = FALSE)
+res1 <- tcareg(data$X, tca.mdl, y, test = "joint")
 # custom test, testing for a joint effect of sources 1,2 while accounting for source 3
 res2 <- tcareg(data$X, tca.mdl, y, test = "custom", null_model = c("3"),
-alternative_model = c("1","2","3"), save_results = FALSE)
+alternative_model = c("1","2","3"))
 # custom test, testing for a joint effect of sources 1,2 assuming no effects under the null
 res3 <- tcareg(data$X, tca.mdl, y, test = "custom", null_model = NULL,
-alternative_model = c("1","2"), save_results = FALSE)
+alternative_model = c("1","2"))
 
 }
 \references{
-Rahmani E, Schweiger R, Rhead B, Criswell LA, Barcellos LF, Eskin E, Rosset S, Sankararaman S, Halperin E. Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology. Nature Communications 2018.
+Rahmani E, Schweiger R, Rhead B, Criswell LA, Barcellos LF, Eskin E, Rosset S, Sankararaman S, Halperin E. Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology. Nature Communications 2019.
 }

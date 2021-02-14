@@ -4,21 +4,31 @@
 \alias{tensor}
 \title{Extracting hidden 3D signals from 2D input}
 \usage{
-tensor(X, tca.mdl, parallel = FALSE, num_cores = NULL,
-  log_file = "TCA.log", debug = FALSE, verbose = TRUE)
+tensor(
+  X,
+  tca.mdl,
+  scale = FALSE,
+  parallel = FALSE,
+  num_cores = NULL,
+  log_file = "TCA.log",
+  debug = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
-\item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} different sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.}
+\item{X}{An \code{m} by \code{n} matrix of measurements of \code{m} features for \code{n} observations. Each column in \code{X} is assumed to be a mixture of \code{k} sources. Note that \code{X} must include row names and column names and that NA values are currently not supported. \code{X} should not include features that are constant across all observations.}
 
 \item{tca.mdl}{The value returned by applying the function \code{tca} to \code{X}.}
+
+\item{scale}{A logical value indicating whether to divide the estimate of each entry in the tensor by its estimated standard deviation.}
 
 \item{parallel}{A logical value indicating whether to use parallel computing (possible when using a multi-core machine).}
 
 \item{num_cores}{A numeric value indicating the number of cores to use (activated only if \code{parallel == TRUE}). If \code{num_cores == NULL} then all available cores except for one will be used.}
 
-\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.}
+\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == FALSE} then no output file will be generated regardless of the value of \code{log_file}.}
 
-\item{debug}{A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.}
+\item{debug}{A logical value indicating whether to set the logger to a more detailed debug level; set \code{debug} to \code{TRUE} before reporting issues.}
 
 \item{verbose}{A logical value indicating whether to print logs.}
 }
@@ -29,7 +39,7 @@ A list with the estimated source-specific values. The first element in the list 
 Estimates 3-dimensional signals (features by observations by sources) from input of mixtures (features by observations), under the assumption of the TCA model that each observation is a mixture of unique source-specific values (in each feature in the data). For example, in the context of  tissue-level bulk DNA methylation data coming from a mixture of cell types (i.e. the input is methylation sites by individuals), \code{tensor} allows to estimate a tensor of cell-type-specific levels for each individual in each methylation site (i.e. a tensor of methylation sites by individuals by cell types).
 }
 \details{
-See \link{tca} for notations and details about the TCA model. Given estimates of the parameters of the model (given by \link{tca}), \code{tensor} uses the conditional distribution \eqn{Z_{hj}^i|X_{ji}} for estimating the \eqn{k} source-specific levels of each observation \eqn{i} in each feature \eqn{j}.
+See \link{tca} for notations and details about the TCA model. Given estimates of the parameters of the model (given by \link{tca}), \code{tensor} uses the conditional distribution \eqn{Z_{hj}^i|X_{ji}=x_{ji}} for estimating the \eqn{k} source-specific levels of each observation \eqn{i} in each feature \eqn{j}.
 }
 \examples{
 data <- test_data(50, 20, 3, 2, 2, 0.01)
@@ -38,5 +48,5 @@ Z_hat <- tensor(data$X, tca.mdl)
 
 }
 \references{
-Rahmani E, Schweiger R, Rhead B, Criswell LA, Barcellos LF, Eskin E, Rosset S, Sankararaman S, Halperin E. Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology. Nature Communications 2018.
+Rahmani E, Schweiger R, Rhead B, Criswell LA, Barcellos LF, Eskin E, Rosset S, Sankararaman S, Halperin E. Cell-type-specific resolution epigenetics without the need for cell sorting or single-cell biology. Nature Communications 2019.
 }

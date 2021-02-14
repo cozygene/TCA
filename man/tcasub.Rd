@@ -4,17 +4,16 @@
 \alias{tcasub}
 \title{Subsetting features from a TCA model}
 \usage{
-tcasub(tca.mdl, features, log_file = "TCA.log", debug = FALSE,
-  verbose = TRUE)
+tcasub(tca.mdl, features, log_file = "TCA.log", debug = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{tca.mdl}{The value returned by applying the function \code{tca} to some data matrix\code{X}.}
 
 \item{features}{A vector with the identifiers of the features to extract (as they appear in the rows of \code{X}).}
 
-\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == TRUE} then no output file will be generated regardless of the value of \code{log_file}.}
+\item{log_file}{A path to an output log file. Note that if the file \code{log_file} already exists then logs will be appended to the end of the file. Set \code{log_file} to \code{NULL} to prevent output from being saved into a file; note that if \code{verbose == FALSE} then no output file will be generated regardless of the value of \code{log_file}.}
 
-\item{debug}{A logical value indicating whether to set the logger to a more detailed debug level; please set \code{debug} to \code{TRUE} before reporting issues.}
+\item{debug}{A logical value indicating whether to set the logger to a more detailed debug level; set \code{debug} to \code{TRUE} before reporting issues.}
 
 \item{verbose}{A logical value indicating whether to print logs.}
 }
@@ -26,6 +25,9 @@ A list with the estimated parameters of the model for the given set of features.
 \item{tau_hat}{Equals to \code{tca.mdl$tau_hat}}
 \item{gammas_hat}{A \code{q} by \code{k*p1}  matrix which is a subset of the matrix \code{tca.mdl$gammas_hat}, where \code{q} is the number of features in the argument \code{features}.}
 \item{deltas_hat}{A \code{q} by \code{p2} matrix which is a subset of the matrix \code{tca.mdl$deltas_hat}, where \code{q} is the number of features in the argument \code{features}.}
+\item{gammas_hat_pvals}{A \code{q} by \code{k*p1} matrix which is a subset of the matrix \code{tca.mdl$gammas_hat_pvals}, where \code{q} is the number of features in the argument \code{features}. Note that if \code{tca.mdl$gammas_hat_pvals == NULL} then \code{gammas_hat_pvals} is also set to NULL.}
+\item{gammas_hat_pvals.joint}{A \code{q} by \code{p1} matrix which is a subset of the matrix \code{tca.mdl$gammas_hat_pvals.joint}, where \code{q} is the number of features in the argument \code{features}. Note that if \code{tca.mdl$gammas_hat_pvals.joint == NULL} then \code{gammas_hat_pvals} is also set to NULL.}
+\item{deltas_hat_pvals}{A \code{q} by \code{p2} matrix which is a subset of the matrix \code{tca.mdl$deltas_hat_pvals}, where \code{q} is the number of features in the argument \code{features}. Note that if \code{tca.mdl$deltas_hat_pvals == NULL} then \code{deltas_hat_pvals} is also set to NULL.}
 }
 \description{
 Extracts from a fitted TCA model (i.e. a value returned by the function \code{tca}) a subset of the features.
@@ -38,7 +40,8 @@ data <- test_data(50, 20, 3, 0, 0, 0.01)
 tca.mdl <- tca(X = data$X, W = data$W)
 tca.mdl.subset <- tcasub(tca.mdl, rownames(data$X)[1:10])
 y <- matrix(rexp(50, rate=.1), ncol=1)
+rownames(y) <- rownames(data$W)
 # run tcareg test with an outcome y:
-res <- tcareg(data$X[1:10,], tca.mdl.subset, y, test = "joint", save_results = FALSE)
+res <- tcareg(data$X[1:10,], tca.mdl.subset, y, test = "joint")
 
 }

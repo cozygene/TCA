@@ -4,11 +4,12 @@ default:
   # optimization configs:
   lsqlincon_inf: 1000000 # lsqlincon fails if given Inf
   min_sd: 0.0001 # minimal value for an estimated variance; required for stability
-  mu_min: NULL # minimal value for each estimated mean; if NULL then this will be set to min(X)
-  mu_max: NULL # maximal value for each estimated mean; if NULL then this will be set to max(X)
+  #mu_min: NULL # minimal value for each estimated mean; if NULL then this will be set to min(X)
+  #mu_max: NULL # maximal value for each estimated mean; if NULL then this will be set to max(X)
   mu_epsilon: 0.00001 # truncates the range [mu_min,mu_max] by this value so that mu is required to be in [mu_mean+mu_epsilon,mu_max-mu_epsilon]; required for numerical stability
   epsilon: 0.001 # percent of difference for convergence
   tau_hat_init: 0.01  # initial estimate of the iid component added on top of the mixture signal
+  V_weight_limit: 1.0e-6  # don't allow extremely small weights in the gmm if vars.mle == TRUE; otherwise estimation may be sensitive to extreme outliers
   # pbapply options:
   nout: 10  # the resolution of the progress bars (higher values -> highr resolution but increased overhead, which in turns results in longer running time)
   type: "txt" # change to "none" to supress the progress bars (this will result is some speed up of the running time)
@@ -23,7 +24,7 @@ default:
   sep: "," # separator for output files
   show_progress: FALSE
   verbose: FALSE
-  fdr_method: "BY"  # can use any method that is provided by p.adjust
+  fdr_method: "BH"  # can use any method that is provided by p.adjust
   # more configs:
   lambda: 0.1 # weight for L2 regularization to handle co-linearily in the association testing
 

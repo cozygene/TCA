@@ -1,3 +1,23 @@
+TCA v1.2.1 (Release date: 02-13-2021)
+==============
+
+*NOTE* v1.2.1 is not backward compatible with earlier versions
+
+Changes:
+
+* A new argument 'vars.mle' in 'tca' which controls the method used for optimization; setting to FALSE allows a much faster optimization.
+
+* A new argument 'fast_mode' in 'tcareg' allows a much faster optimization.
+
+* A new argument 'constrain_mu' in 'tca' allows to determine whether to constrain the mean parameters in the optimization; setting to false now allows to obtain p-values for the covariates in 'C1' and 'C2'.
+
+* A new 'scale' argument in 'tensor' for dividing estimates by estimated standard deviations.
+
+* Default values of several arguments have been changed.
+
+* Switched the default FDR method used in ‘tcareg’ back from “BY” to “BH” (can be changed by editing the config file).
+
+
 TCA v1.1.0 (Release date: 11-14-2019)
 ==============
 

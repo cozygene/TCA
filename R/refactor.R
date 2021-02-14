@@ -27,7 +27,8 @@ refactor.run <- function(X, k, sparsity, C, C.remove, sd_threshold, num_comp, ra
   X_adj <- X
   if (!is.null(C)){
     flog.info("Adjusting the data for covariates...")
-    X_adj <- X - tcrossprod(tcrossprod(X,tcrossprod(matrix.inverse(crossprod(C,C)),C)),C)
+    C_ <- cbind(numeric(nrow(C)) + 1, C)
+    X_adj <- X - tcrossprod(tcrossprod(X,tcrossprod(matrix.inverse(crossprod(C_,C_)),C_)),C_)
   }
 
   flog.info("Running PCA on X using rand_svd == %s...", rand_svd)

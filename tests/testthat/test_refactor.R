@@ -12,8 +12,6 @@ test_that("Compare the result of refactor with those of the matlab version of re
   X <- as.matrix(read.table(paste(basedir,"X.txt",sep=""), header = FALSE, sep=","))
   rownames(X) <- 1:nrow(X)
   C <- as.matrix(read.table(paste(basedir,"C2.txt",sep=""), header = FALSE, sep=","))
-  # add intercept
-  C <- cbind(matrix(1,nrow(X),1),C)
   t <- 50
   k <- 3
   matlab.ref_comp <- as.matrix(read.table(paste(basedir,"refactor.R_est.txt",sep=""), header = FALSE, sep=","))
@@ -44,3 +42,22 @@ test_that("Compare the result of refactor with those of the matlab version of re
   }
 
 })
+
+
+test_that("Verify the C.remove argument", {
+
+  skip_on_cran()
+
+  n = 100; m = 50; k = 3; tau = 0.01; p1 = 0; p2 = 2;
+  res <- test_data(n, m, k, p1, p2, tau, log_file = NULL)
+  X <- res$X
+  C2 <- res$C2
+
+  ref1 <- refactor(X, k, sparsity = 10, C = C2, C.remove = TRUE, debug = TRUE, log_file = NULL)
+  expect_equal(sum(abs(sort(cor(ref1$scores,C2))) > 10e-14) == 0, TRUE)
+
+  ref2 <- refactor(X, k, sparsity = 10, C = C2, C.remove = FALSE, debug = TRUE, log_file = NULL)
+  expect_equal(sum(abs(sort(cor(ref2$scores,C2))) > 10e-14) > 0, TRUE)
+
+})
+

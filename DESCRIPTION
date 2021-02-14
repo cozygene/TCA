@@ -1,17 +1,18 @@
 Package: TCA
 Type: Package
 Title: Tensor Composition Analysis
-Version: 1.1.0
-Authors@R: person("Elior", "Rahmani", email = "elior.rahmani@gmail.com", role = c("aut", "cre"))
-Author: Elior Rahmani [aut, cre]
-Maintainer: Elior Rahmani <elior.rahmani@gmail.com>
-Description: Tensor Composition Analysis (TCA) allows the deconvolution of two-dimensional data (features by observations) coming from a mixture of sources into a three-dimensional matrix of signals (features by observations by sources). TCA further allows to test the features in the data for different statistical relations with an outcome of interest while modeling source-specific effects (TCA regression); particularly, it allows to look for statistical relations between source-specific signals and an outcome. For example, TCA can deconvolve bulk tissue-level DNA methylation data (methylation sites by individuals) into a tensor of cell-type-specific methylation levels for each individual (methylation sites by individuals by cell types) and it allows to detect cell-type-specific relations (associations) with an outcome of interest. For more details see Rahmani et al. (2018) <DOI:10.1101/437368>.
+Version: 1.2.1
+Authors@R: c(
+    person("Elior", "Rahmani", role=c("aut", "cre"), email = "elior.rahmani@gmail.com"),
+    person("Brandon", "Jew", role=c("ctb"))
+    )
+Description: Tensor Composition Analysis (TCA) allows the deconvolution of two-dimensional data (features by observations) coming from a mixture of heterogeneous sources into a three-dimensional matrix of signals (features by observations by sources). The TCA framework further allows to test the features in the data for different statistical relations with an outcome of interest while modeling source-specific effects; particularly, it allows to look for statistical relations between source-specific signals and an outcome. For example, TCA can deconvolve bulk tissue-level DNA methylation data (methylation sites by individuals) into a three-dimensional tensor of cell-type-specific methylation levels for each individual (i.e. methylation sites by individuals by cell types) and it allows to detect cell-type-specific statistical relations (associations) with phenotypes. For more details see Rahmani et al. (2019) <DOI:10.1038/s41467-019-11052-9>.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Imports: config, data.table, futile.logger, gmodels, Matrix, matrixcalc, matrixStats, nloptr, parallel, pbapply, pracma, rsvd, stats, quadprog, glmnet
-RoxygenNote: 6.1.1
-Depends: R (>= 3.4.0)
+RoxygenNote: 7.1.1
+Depends: R (>= 3.5.0)
 Suggests: 
     testthat,
     knitr,
