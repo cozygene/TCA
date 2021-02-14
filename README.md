@@ -15,7 +15,7 @@ The R package of TCA is available on CRAN. Run the following in R to install TCA
 install.packages("TCA")
 ```
 
-The manual of the TCA R package can be found <a href="https://cran.r-project.org/web/packages/TCA/TCA.pdf" target="_blank">here</a>.
+The manual of the TCA R package can be found <a href="https://cran.r-project.org/package=TCA/TCA.pdf" target="_blank">here</a>.
 
 You can also find a full working example of TCA in <a href="https://cran.r-project.org/package=TCA/vignettes/tca-vignette.html" target="_blank">this vignette</a> about cell-type-specific resolution epigenetics using TCA in R.
 
