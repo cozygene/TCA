@@ -42,7 +42,7 @@ There are three key functions in the TCA package:
 
 Note that both `tca` and `tcareg` can be used for statistical testing, yet, each of them makes different assumptions about the statistical relation between the methylation and the phenotype of interest (more on that to come later).
 
-In the next sections, we describe the main components of these functions and discuss the key aspects in applying TCA for differential methylation analysis. For more details about the TCA package, including a full description of the arguments and output of each function, refer to the [package manual](https://cran.rstudio.com/web/packages/TCA/TCA.pdf).
+In the next sections, we describe the main components of these functions and discuss the key aspects in applying TCA for differential methylation analysis. For more details about the TCA package, including a full description of the arguments and output of each function, refer to the [package manual](https://cran.r-project.org/package=TCA/TCA.pdf).
 For further information about the TCA framework refer to the manuscript describing it <sup>[1](#myfootnote1)</sup>.
 
 # Preparing the input
@@ -55,7 +55,7 @@ Fitting the TCA model using the function `tca` requires two arguments:
 For practical reasons, cell count measurements are typically not collected in genomic studies.
 However, cell-type proportions can be computationally estimated. Particularly, a reference-based approach can be used in cases where appropriate reference is available (methylation from sorted cells composing the same tissue type under study) <sup>[2](#myfootnote2)</sup>, and otherwise, a semi-supervised reference-free approach can be used <sup>[3](#myfootnote3)</sup>. Notably, existing reference-free methods for estimating cell-type proportions were shown to be non-identifiable and are therefore not recommended in this case <sup>[3](#myfootnote3)</sup>.
 
-In cases where estimates are either known or expected to be of low quality, as we later demonstrate,  we can re-estimate them under the TCA model using the `refit_W` argument. For more information about this option refer to the [package manual](https://cran.rstudio.com/web/packages/TCA/TCA.pdf).
+In cases where estimates are either known or expected to be of low quality, as we later demonstrate,  we can re-estimate them under the TCA model using the `refit_W` argument. For more information about this option refer to the [package manual](https://cran.r-project.org/package=TCA/TCA.pdf).
 
 In addition to the two required arguments above, the function `tca` can (and should, when appropriate) take into account covariates. There are two arguments that were designed to handle two types of covariates:
 
@@ -381,7 +381,7 @@ Here, we use gender and gestational age as covariates at the cell-type level (ar
 Unlike our analysis in Example 1, here we take the assumption Y|X. For that reason, we do not include the arousal variable in `C1`, as it is not assumed to affect methylation; instead, we will soon use it as the phenotype in `tcareg`.
 
 Our execution of `tca` above introduced an additional argument of `tca` that we did not consider before: `constrain_mu`. This argument takes a boolean value (default is `FALSE`) and informs `tca` whether to constrain the mean parameters in the TCA model during the optimization (i.e. constrain to the range of possible values in the data). Setting `constrain_mu = TRUE` does not allow to calculate p-values for the covariates in the model. However, since we do not need to extract p-values from the function `tca` (we will perform statistical testing using the `tcareg` function, which takes the assumption Y|X), we can set `constrain_mu = TRUE` in order to allow more sensible estimates of the mean parameters in the model (those will be later used for re-estimating the cell-type proportions).
-For more information about the argument `constrain_mu` refer to the [package manual](https://cran.rstudio.com/web/packages/TCA/TCA.pdf).
+For more information about the argument `constrain_mu` refer to the [package manual](https://cran.r-project.org/package=TCA/TCA.pdf).
 
 We next fit a model for the arousal variable using the `tcareg` function, which allows us  to model it as a function of methylation at cell-type resolution.
 Similarly to Example1, we consider a two-step approach in our analysis: a joint test for detecting associated sites, followed by a post-hoc analysis of the associated sites for the detection of differentially methylated cell types (using marginal conditional tests). 

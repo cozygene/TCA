@@ -10,7 +10,7 @@ Description: Tensor Composition Analysis (TCA) allows the deconvolution of two-d
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: config, data.table, futile.logger, gmodels, Matrix, matrixcalc, matrixStats, nloptr, parallel, pbapply, pracma, rsvd, stats, quadprog, glmnet
+Imports: config, data.table, futile.logger, gmodels, matrixcalc, matrixStats, nloptr, parallel, pbapply, pracma, rsvd, stats
 RoxygenNote: 7.1.1
 Depends: R (>= 3.5.0)
 Suggests: 
